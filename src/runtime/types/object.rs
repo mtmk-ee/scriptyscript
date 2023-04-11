@@ -1,8 +1,17 @@
-use std::{sync::{Arc, Mutex}, fmt::{Debug, Formatter}, borrow::Borrow};
+use std::{
+    borrow::Borrow,
+    fmt::{Debug, Formatter},
+    sync::{Arc, Mutex},
+};
 
-use crate::runtime::{state::State, executor::execute};
+use crate::runtime::{executor::execute, state::State};
 
-use super::{primitive::Primitive, function::Function, table::Table, utilities::{nil, int, float}};
+use super::{
+    function::Function,
+    primitive::Primitive,
+    table::Table,
+    utilities::{float, int, nil},
+};
 
 #[derive(Debug, Clone)]
 pub enum ObjectValue {

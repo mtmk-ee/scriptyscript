@@ -1,7 +1,11 @@
-use crate::runtime::{types::{utilities::{wrapped_function, string}, object::ObjectValue, primitive::Primitive}, state::State};
-
-
-
+use crate::runtime::{
+    state::State,
+    types::{
+        object::ObjectValue,
+        primitive::Primitive,
+        utilities::{string, wrapped_function},
+    },
+};
 
 pub fn register(state: &mut State) {
     state.set_global("print", wrapped_function(print));

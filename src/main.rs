@@ -1,7 +1,9 @@
 use std::io::Write;
 
 use scriptyscript::{
-    compiler::compile, runtime::{state::State, types::primitive::Primitive, executor::execute}, stdlib::to_string,
+    compiler::compile,
+    runtime::{executor::execute, state::State, types::primitive::Primitive},
+    stdlib::to_string,
 };
 
 /// Main entry point for the REPL.

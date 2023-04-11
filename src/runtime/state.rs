@@ -7,7 +7,6 @@ use crate::stdlib;
 
 use super::types::{object::Object, utilities::nil};
 
-
 pub struct CallFrame {
     pub parent: Option<Arc<Mutex<CallFrame>>>,
     pub operands: Vec<Object>,

@@ -1,4 +1,11 @@
-use super::{state::State, opcode::OpCode, types::{utilities::{int, string, boolean, float, nil}, object::{add, subtract, multiply, divide, remainder, negate}}};
+use super::{
+    opcode::OpCode,
+    state::State,
+    types::{
+        object::{add, divide, multiply, negate, remainder, subtract},
+        utilities::{boolean, float, int, nil, string},
+    },
+};
 
 pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
     let frame = state.current_frame().expect("no call frame");

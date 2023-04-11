@@ -1,10 +1,6 @@
-
 use crate::runtime::opcode::OpCode;
 
-use super::ast::{AstNode, Number, BinaryOperationKind, UnaryOperationKind};
-
-
-
+use super::ast::{AstNode, BinaryOperationKind, Number, UnaryOperationKind};
 
 /// Translates an AST node into a list of opcodes which can be executed on a state.
 ///
@@ -42,12 +38,10 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
         AstNode::Identifier(identifier) => {
             bytecode.push(OpCode::Load(identifier.clone()));
         }
-        AstNode::NumberLiteral(number) => {
-            match number {
-                Number::Integer(x) => bytecode.push(OpCode::PushInteger(*x)),
-                Number::Float(x) => bytecode.push(OpCode::PushFloat(*x)),
-            }
-        }
+        AstNode::NumberLiteral(number) => match number {
+            Number::Integer(x) => bytecode.push(OpCode::PushInteger(*x)),
+            Number::Float(x) => bytecode.push(OpCode::PushFloat(*x)),
+        },
         AstNode::StringLiteral(string) => {
             bytecode.push(OpCode::PushString(string.clone()));
         }
@@ -59,9 +53,7 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
     Ok(bytecode)
 }
 
-
 impl From<BinaryOperationKind> for OpCode {
-
     /// Convert a [`BinaryOperationKind`] into its matching [`OpCode`].
     fn from(kind: BinaryOperationKind) -> Self {
         match kind {
@@ -76,7 +68,6 @@ impl From<BinaryOperationKind> for OpCode {
 }
 
 impl From<UnaryOperationKind> for OpCode {
-
     /// Convert a [`UnaryOperationKind`] into its matching [`OpCode`].
     fn from(_kind: UnaryOperationKind) -> Self {
         match _kind {
