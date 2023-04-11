@@ -1,10 +1,9 @@
 use std::{
-    borrow::Borrow,
     fmt::{Debug, Formatter},
     sync::{Arc, Mutex},
 };
 
-use crate::runtime::{executor::execute, state::State};
+use crate::runtime::{state::State};
 
 use super::{
     function::Function,

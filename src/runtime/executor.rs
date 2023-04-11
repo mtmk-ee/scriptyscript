@@ -94,7 +94,7 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 state.push_all(&args);
                 let push_amt = match function.borrow() {
                     Function::Wrapped(f) => f(state, *n),
-                    Function::Scripted(f) => execute(state, &f.bytecode()),
+                    Function::Scripted(f) => execute(state, f.bytecode()),
                 };
                 let returns = state.pop_n(push_amt);
                 state.pop_frame();
@@ -112,14 +112,12 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 let condition = state.pop().expect("no condition");
                 if let Some(condition) = condition.as_bool() {
                     if condition {
-                        match execute_impl(state, body) {
-                            ControlFlow::Return(n) => return ControlFlow::Return(n),
-                            _ => {}
+                        if let ControlFlow::Return(n) = execute_impl(state, body) {
+                            return ControlFlow::Return(n);
                         }
                     } else if let Some(else_body) = else_body {
-                        match execute_impl(state, else_body) {
-                            ControlFlow::Return(n) => return ControlFlow::Return(n),
-                            _ => {}
+                        if let ControlFlow::Return(n) = execute_impl(state, else_body) {
+                            return ControlFlow::Return(n);
                         }
                     }
                 } else {
@@ -177,7 +175,7 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
         // );
     }
 
-    return ControlFlow::None;
+    ControlFlow::None
 }
 
 enum ControlFlow {

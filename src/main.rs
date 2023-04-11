@@ -33,7 +33,7 @@ fn run_file(state: &mut State, file: impl AsRef<Path>) {
 
 fn show_bytecode(file: impl AsRef<Path>) {
     let source = std::fs::read_to_string(file).unwrap();
-    let bytecode = scriptyscript::compiler::compile(&source).unwrap();
+    let bytecode = scriptyscript::compiler::compile(source).unwrap();
     println!("{:?}", bytecode);
 }
 
