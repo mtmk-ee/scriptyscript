@@ -13,6 +13,10 @@ pub enum AstNode {
         identifier: String,
         args: Vec<AstNode>,
     },
+    FunctionDef {
+        args: Vec<String>,
+        body: Box<AstNode>,
+    },
     UnaryOperation {
         kind: UnaryOperationKind,
         operand: Box<AstNode>,
@@ -25,6 +29,9 @@ pub enum AstNode {
     Assignment {
         identifier: String,
         value: Box<AstNode>,
+    },
+    Return {
+        value: Option<Box<AstNode>>,
     },
     Block(Vec<AstNode>),
 }

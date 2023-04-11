@@ -1,6 +1,7 @@
 use crate::runtime::{
     state::State,
     types::{
+        function::Function,
         object::ObjectValue,
         primitive::Primitive,
         utilities::{string, wrapped_function},
@@ -19,7 +20,12 @@ pub fn to_string(state: &mut State, n: usize) -> usize {
     let value = value.value();
     let result = match value {
         Some(ObjectValue::Primitive(x)) => string(x.to_string()),
-        Some(ObjectValue::Function(_)) => string("function"),
+        Some(ObjectValue::Function(x)) => {
+            match x.as_ref() {
+                Function::Scripted(x) => string(format!("scripted function: {:?}", x.bytecode())),
+                Function::Wrapped(_) => string("wrapped function"),
+            }
+        },
         Some(ObjectValue::Table(_)) => {
             todo!(); // need to invoke __str__
         }

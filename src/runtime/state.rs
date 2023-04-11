@@ -42,8 +42,11 @@ impl CallFrame {
         let local_value = self.locals.get(name).cloned();
         if let Some(x) = local_value {
             self.push(&x);
-        } else if let Some(parent) = &self.parent {
-            parent.lock().unwrap().load(name);
+        } else if self.parent.is_some() {
+            let parent = self.parent.clone().unwrap();
+            let mut parent = parent.lock().unwrap();
+            parent.load(name);
+            self.push(&parent.pop().unwrap());
         } else {
             self.push(&nil());
         }

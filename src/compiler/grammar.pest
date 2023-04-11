@@ -14,12 +14,22 @@ keyword = @{
     | "and" | "or" | "not"
 }
 
-block = {
-	statement+
+statements = {
+	statement*
 }
 
 script = _{
-	SOI ~ block ~ EOI
+	SOI ~ statements ~ EOI
+}
+
+block = _{
+    "{" ~ statements ~ "}"
+}
+
+arguments = { "(" ~ (identifier ~ ("," ~ identifier)*)? ~ ")" }
+
+function_def = {
+    "fn" ~ arguments ~ block
 }
 
 // ============================================================================
@@ -72,6 +82,7 @@ expression = { prefix* ~ primary ~ (infix ~ prefix* ~ primary )* }
         | nil_literal
         | function_call
         | identifier
+        | function_def
         | "(" ~ expression ~ ")"
     }
 
@@ -85,5 +96,7 @@ function_call = {
 statement = {
 	assign
     | expression ~ ";"
+    | return_
 }
 assign = { identifier ~ "=" ~ expression ~ ";" }
+return_ = { "return" ~ expression? ~ ";" }

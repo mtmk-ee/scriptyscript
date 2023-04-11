@@ -26,6 +26,23 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             bytecode.push(OpCode::Load(identifier.clone()));
             bytecode.push(OpCode::Call(args.len()));
         }
+        AstNode::FunctionDef { args, body } => {
+            let mut translated_body = Vec::new();
+            for name in args {
+                translated_body.push(OpCode::Store(name.clone()))
+            }
+            translated_body.extend(translate_node(body).unwrap());
+
+            bytecode.push(OpCode::PushFunction(translated_body));
+        }
+        AstNode::Return { value } => {
+            let mut n = 0;
+            if let Some(value) = value {
+                bytecode.extend(translate_node(value).unwrap());
+                n = 1;
+            }
+            bytecode.push(OpCode::Return(n));
+        }
         AstNode::BinaryOperation { kind, left, right } => {
             bytecode.extend(translate_node(left).unwrap());
             bytecode.extend(translate_node(right).unwrap());

@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use crate::runtime::{opcode::OpCode, state::State};
 
@@ -13,11 +13,18 @@ pub enum Function {
 impl Debug for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Scripted(func) => f.debug_tuple("Scripted").field(func).finish(),
-            Self::Wrapped(func) => f.debug_tuple("Wrapped").field(&(*func as usize)).finish(),
+            Self::Scripted(func) => f.debug_tuple("scripted function").field(func.bytecode()).finish(),
+            Self::Wrapped(func) => f.debug_tuple("wrapped function").field(&(*func as usize)).finish(),
         }
     }
 }
+
+impl Display for Function {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&self, f)
+    }
+}
+
 
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {

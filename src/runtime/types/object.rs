@@ -110,7 +110,7 @@ impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Primitive(p)) => write!(f, "{}", p.to_string()),
-            Some(ObjectValue::Function(_)) => write!(f, "function"),
+            Some(ObjectValue::Function(function)) => write!(f, "{}", function),
             Some(ObjectValue::Table(t)) => write!(f, "table: {:?}", t),
             None => write!(f, "nil"),
         }

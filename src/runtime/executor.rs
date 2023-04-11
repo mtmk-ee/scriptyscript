@@ -5,7 +5,7 @@ use super::{
     state::State,
     types::{
         object::{add, divide, multiply, negate, remainder, subtract},
-        utilities::{boolean, float, int, nil, string},
+        utilities::{boolean, float, int, nil, scripted_function, string},
     },
 };
 
@@ -25,12 +25,12 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
     let frame = state.current_frame().expect("no call frame");
     let mut pointer = 0;
 
-    let stack_size = || frame.lock().unwrap().operands.len();
-    let initial_stack_size = stack_size();
-
     while pointer < bytecode.len() {
         let opcode = &bytecode[pointer];
         pointer += 1;
+
+        // println!("=================================");
+        // println!("executing opcode: {:?}", opcode);
 
         match opcode {
             OpCode::PushInteger(x) => {
@@ -44,6 +44,9 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
             }
             OpCode::PushBool(x) => {
                 frame.lock().unwrap().push(&boolean(*x));
+            }
+            OpCode::PushFunction(x) => {
+                frame.lock().unwrap().push(&scripted_function(x.clone()));
             }
             OpCode::Store(identifier) => {
                 frame.lock().unwrap().store_local(identifier);
@@ -64,6 +67,9 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
             OpCode::Call(n) => {
                 let function = frame.lock().unwrap().pop();
                 function.unwrap().call(state, *n);
+            }
+            OpCode::Return(n) => {
+                return *n;
             }
             OpCode::Duplicate => {
                 let value = frame.lock().unwrap().peek().unwrap();
@@ -92,12 +98,12 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
                     _ => unreachable!(),
                 };
             }
-        }
-    }
+        };
 
-    if stack_size() < initial_stack_size {
-        panic!("stack corrupted");
+        // println!(
+        //     "stack: {:?}",
+        //     state.current_frame().unwrap().lock().unwrap().operands
+        // );
     }
-
-    stack_size() - initial_stack_size
+    0
 }

@@ -12,6 +12,7 @@ pub enum OpCode {
     PushInteger(i64),
     PushFloat(f64),
     PushBool(bool),
+    PushFunction(Vec<OpCode>),
 
     // Binary operations
     Add,
@@ -23,4 +24,5 @@ pub enum OpCode {
     Negate,
 
     Call(usize),
+    Return(usize),
 }

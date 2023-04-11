@@ -21,11 +21,11 @@ pub struct GrammarParser {}
 /// Returns a [`pest::error::Error`] if the string cannot be parsed.
 pub fn parse(s: impl AsRef<str>) -> Result<AstNode, Box<pest::error::Error<Rule>>> {
     let mut pairs = GrammarParser::parse(Rule::script, s.as_ref())?;
-    Ok(parse_block(pairs.next().unwrap().into_inner()))
+    Ok(parse_statements(pairs.next().unwrap().into_inner()))
 }
 
 /// Parse a block of statements into an [`AstNode`]
-fn parse_block(pairs: Pairs) -> AstNode {
+fn parse_statements(pairs: Pairs) -> AstNode {
     AstNode::Block(
         pairs
             .map(|pair| match pair.as_rule() {
@@ -43,6 +43,7 @@ pub fn parse_statement(pairs: Pairs) -> AstNode {
     match pair.as_rule() {
         Rule::assign => parse_assignment(pair.into_inner()),
         Rule::expression => parse_expression(pair.into_inner()),
+        Rule::return_ => parse_return(pair.into_inner()),
         _ => unreachable!(),
     }
 }
@@ -55,6 +56,19 @@ pub fn parse_assignment(pairs: Pairs) -> AstNode {
     AstNode::Assignment {
         identifier,
         value: Box::new(parse_expression(value)),
+    }
+}
+
+pub fn parse_return(pairs: Pairs) -> AstNode {
+    let mut pairs = pairs;
+    match pairs.next() {
+        Some(pair) => {
+            let value = pair.into_inner();
+            AstNode::Return {
+                value: Some(Box::new(parse_expression(value))),
+            }
+        }
+        None => AstNode::Return { value: None },
     }
 }
 
@@ -133,6 +147,7 @@ pub fn parse_expression_primary(pair: Pair) -> AstNode {
         Rule::bool_literal => AstNode::BooleanLiteral(parse_boolean_literal(pair)),
         Rule::expression => parse_expression(pair.into_inner()),
         Rule::function_call => parse_function_call(pair.into_inner()),
+        Rule::function_def => parse_function_def(pair.into_inner()),
         _ => unreachable!(),
     }
 }
@@ -146,6 +161,20 @@ pub fn parse_function_call(pairs: Pairs) -> AstNode {
         args: pairs
             .map(|pair| parse_expression(pair.into_inner()))
             .collect(),
+    }
+}
+
+pub fn parse_function_def_arguments(pairs: Pairs) -> Vec<String> {
+    pairs.map(|pair| pair.as_str().to_string()).collect()
+}
+
+pub fn parse_function_def(pairs: Pairs) -> AstNode {
+    let mut pairs = pairs;
+    let args = parse_function_def_arguments(pairs.next().unwrap().into_inner());
+    let body = parse_statements(pairs.next().unwrap().into_inner());
+    AstNode::FunctionDef {
+        args,
+        body: Box::new(body),
     }
 }
 

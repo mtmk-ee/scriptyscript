@@ -7,6 +7,8 @@ use scriptyscript::runtime::{executor::execute_source, state::State};
 struct Arguments {
     /// File to run
     file: Option<PathBuf>,
+    #[arg(short, long, default_value_t = false)]
+    show_bytecode: bool,
 }
 
 fn main() {
@@ -14,7 +16,11 @@ fn main() {
     let mut state = State::new();
 
     if let Some(file) = args.file {
-        run_file(&mut state, file);
+        if args.show_bytecode {
+            show_bytecode(file);
+        } else {
+            run_file(&mut state, file);
+        }
     } else {
         repl::run(&mut state);
     }
@@ -23,6 +29,12 @@ fn main() {
 fn run_file(state: &mut State, file: impl AsRef<Path>) {
     let source = std::fs::read_to_string(file).unwrap();
     execute_source(state, &source).unwrap();
+}
+
+fn show_bytecode(file: impl AsRef<Path>) {
+    let source = std::fs::read_to_string(file).unwrap();
+    let bytecode = scriptyscript::compiler::compile(&source).unwrap();
+    println!("{:?}", bytecode);
 }
 
 mod repl {
@@ -43,13 +55,13 @@ mod repl {
                 println!("Error: {}", e);
                 continue;
             }
-            display_top(state, pushed_amt.unwrap());
+            display_top(state);
         }
     }
 
-    fn display_top(state: &mut State, pushed_amt: usize) {
-        if pushed_amt != 0 {
-            let pushed_amt = to_string(state, pushed_amt);
+    fn display_top(state: &mut State,) {
+        if state.peek().is_some() {
+            let pushed_amt = to_string(state, 1);
             assert_eq!(pushed_amt, 1);
             let primitive = state.pop().unwrap().as_primitive();
             match primitive {
