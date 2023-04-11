@@ -11,11 +11,11 @@ Current language features include:
 - Functions
     - Recursion
     - Bindings for Rust-side functions
-- Loops
+- Loops (supports `break` and `continue`)
     - `while`
     - `for`
     - `loop` (infinite loop)
-- If/else-if/else statements
+- `if` / `else if` / `else` statements
 - Comments (single line and multi-line)
 - Arbitrary expressions
 

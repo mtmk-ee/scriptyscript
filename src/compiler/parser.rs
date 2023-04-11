@@ -44,6 +44,8 @@ pub fn parse_statement(pairs: Pairs) -> AstNode {
         Rule::assign_statement => parse_assignment(pair.into_inner()),
         Rule::expression => parse_expression(pair.into_inner()),
         Rule::return_statement => parse_return(pair.into_inner()),
+        Rule::break_statement => AstNode::Break,
+        Rule::continue_statement => AstNode::Continue,
         Rule::if_statement => parse_if(pair.into_inner()),
         Rule::for_statement => parse_for_statement(pair.into_inner()),
         Rule::while_statement => parse_while_statement(pair.into_inner()),

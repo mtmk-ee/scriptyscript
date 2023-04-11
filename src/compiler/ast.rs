@@ -33,6 +33,8 @@ pub enum AstNode {
     Return {
         value: Option<Box<AstNode>>,
     },
+    Break,
+    Continue,
     If {
         condition: Box<AstNode>,
         body: Box<AstNode>,

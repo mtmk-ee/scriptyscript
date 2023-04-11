@@ -34,6 +34,8 @@ pub enum OpCode {
 
     Call(usize),
     Return(usize),
+    Break,
+    Continue,
 
     If {
         condition: Vec<OpCode>,

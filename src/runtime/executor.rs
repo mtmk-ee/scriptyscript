@@ -17,6 +17,36 @@ use super::{
     },
 };
 
+
+macro_rules! propagate_control_flow {
+    ($cf:expr) => {
+        match $cf {
+            ControlFlow::Return(n) => return ControlFlow::Return(n),
+            ControlFlow::Break => return ControlFlow::Break,
+            ControlFlow::Continue => return ControlFlow::Continue,
+            ControlFlow::None => {}
+        }
+    };
+}
+
+macro_rules! perform_loop_control_flow {
+    ($cf:expr) => {
+        match $cf {
+            ControlFlow::Return(n) => return ControlFlow::Return(n),
+            ControlFlow::Break => break,
+            ControlFlow::Continue => continue,
+            ControlFlow::None => {}
+        }
+    };
+}
+
+enum ControlFlow {
+    Return(usize),
+    Break,
+    Continue,
+    None,
+}
+
 /// Parse, compile, and run the input string on the given state.
 ///
 /// Returns the number of objects pushed onto the stack.
@@ -85,25 +115,23 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
             OpCode::Return(n) => {
                 return ControlFlow::Return(*n);
             }
+            OpCode::Break => {
+                return ControlFlow::Break;
+            }
+            OpCode::Continue => {
+                return ControlFlow::Continue;
+            }
             opcode @ OpCode::If { .. } => {
-                if let ControlFlow::Return(n) = if_statement(state, opcode) {
-                    return ControlFlow::Return(n);
-                }
+                propagate_control_flow!(if_statement(state, opcode));
             }
             opcode @ OpCode::For { .. } => {
-                if let ControlFlow::Return(n) = for_loop(state, opcode) {
-                    return ControlFlow::Return(n);
-                }
+                propagate_control_flow!(for_loop(state, opcode));
             }
             opcode @ OpCode::While { .. } => {
-                if let ControlFlow::Return(n) = while_loop(state, opcode) {
-                    return ControlFlow::Return(n);
-                }
+                propagate_control_flow!(while_loop(state, opcode));
             }
             opcode @ OpCode::Loop { .. } => {
-                if let ControlFlow::Return(n) = infinite_loop(state, opcode) {
-                    return ControlFlow::Return(n);
-                }
+                propagate_control_flow!(infinite_loop(state, opcode));
             }
             OpCode::Duplicate => {
                 let value = frame.lock().unwrap().peek().unwrap();
@@ -135,10 +163,6 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
     ControlFlow::None
 }
 
-enum ControlFlow {
-    Return(usize),
-    None,
-}
 
 fn binary_operation(state: &mut State, opcode: &OpCode) {
     let right = state.pop().unwrap();
@@ -192,9 +216,7 @@ fn for_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
             None => true,
         };
         if condition_result {
-            if let ControlFlow::Return(n) = execute_impl(state, body) {
-                return ControlFlow::Return(n);
-            }
+            perform_loop_control_flow!(execute_impl(state, body));
             if let Some(increment) = increment {
                 execute(state, increment);
             }
@@ -215,14 +237,13 @@ fn while_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
         let condition_result = state.pop().expect("no condition");
         if let Some(condition_result) = condition_result.as_bool() {
             if condition_result {
-                if let ControlFlow::Return(n) = execute_impl(state, body) {
-                    break ControlFlow::Return(n);
-                }
+                perform_loop_control_flow!(execute_impl(state, body));
             } else {
-                break ControlFlow::None;
+                break;
             }
         }
     }
+    ControlFlow::None
 }
 
 fn infinite_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
@@ -231,10 +252,9 @@ fn infinite_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
         _ => unreachable!(),
     };
     loop {
-        if let ControlFlow::Return(n) = execute_impl(state, body) {
-            break ControlFlow::Return(n);
-        }
+        perform_loop_control_flow!(execute_impl(state, body));
     }
+    ControlFlow::None
 }
 
 fn if_statement(state: &mut State, opcode: &OpCode) -> ControlFlow {
@@ -250,13 +270,9 @@ fn if_statement(state: &mut State, opcode: &OpCode) -> ControlFlow {
     let condition = state.pop().expect("no condition");
     if let Some(condition) = condition.as_bool() {
         if condition {
-            if let ControlFlow::Return(n) = execute_impl(state, body) {
-                return ControlFlow::Return(n);
-            }
+            propagate_control_flow!(execute_impl(state, body));
         } else if let Some(else_body) = else_body {
-            if let ControlFlow::Return(n) = execute_impl(state, else_body) {
-                return ControlFlow::Return(n);
-            }
+            propagate_control_flow!(execute_impl(state, else_body));
         }
     } else {
         // TODO: exception handling

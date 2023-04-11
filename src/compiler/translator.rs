@@ -43,6 +43,12 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             }
             bytecode.push(OpCode::Return(n));
         }
+        AstNode::Break => {
+            bytecode.push(OpCode::Break);
+        }
+        AstNode::Continue => {
+            bytecode.push(OpCode::Continue);
+        }
         AstNode::If {
             condition,
             body,

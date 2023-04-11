@@ -91,9 +91,11 @@ statements = { statement* }
         assign_statement = { assign_no_semicolon ~ ";" }
             assign_no_semicolon = _{ identifier ~ "=" ~ expression }
 
-control_flow_statement = _{ return_statement | if_statement | loop_statement }
-    jump_statement = _{ return_statement }
+control_flow_statement = _{ return_statement | if_statement | loop_statement | jump_statement }
+    jump_statement = _{ return_statement | break_statement | continue_statement }
         return_statement = { "return" ~ expression? ~ ";" }
+        break_statement = { "break" ~ ";" }
+        continue_statement = { "continue" ~ ";" }
     if_statement = { "if" ~ expression ~ block ~ (elseif_clause*) ~ (else_clause?) ~ ";"? }
         elseif_clause = { "else if" ~ expression ~ block }
         else_clause = { "else" ~ block }
