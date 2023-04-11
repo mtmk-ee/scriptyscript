@@ -88,9 +88,10 @@ statements = { statement* }
         | expression ~ ";"
         | control_flow_statement
     }
-        assign_statement = { identifier ~ "=" ~ expression ~ ";" }
+        assign_statement = { assign_no_semicolon ~ ";" }
+            assign_no_semicolon = _{ identifier ~ "=" ~ expression }
 
-control_flow_statement = _{ return_statement | if_statement }
+control_flow_statement = _{ return_statement | if_statement | loop_statement }
     jump_statement = _{ return_statement }
         return_statement = { "return" ~ expression? ~ ";" }
     if_statement = { "if" ~ expression ~ block ~ (elseif_clause*) ~ (else_clause?) ~ ";"? }
@@ -98,5 +99,8 @@ control_flow_statement = _{ return_statement | if_statement }
         else_clause = { "else" ~ block }
     loop_statement = _ { for_statement }
         for_statement = {
-            "for" ~ "(" ~ (assign_statement)? ~ ";" ~ expression ~ ";" ~ (assign_statement)? ~ ")" ~ block
+            "for" ~ "(" ~ for_init? ~ ";" ~ for_condition? ~ ";" ~ for_increment? ~ ")" ~ block
         }
+            for_init = { assign_no_semicolon }
+            for_condition = { expression }
+            for_increment = { assign_no_semicolon }

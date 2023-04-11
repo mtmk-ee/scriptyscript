@@ -1,7 +1,5 @@
 
-// compute the fibonacci number N
 fib = fn(n) {
-    print(n);
     if n <= 1 {
         return n;
     } else {
@@ -9,4 +7,6 @@ fib = fn(n) {
     }
 };
 
-fib(2);
+for (n = 0; n < 10; n = n + 1) {
+    print(fib(n));
+}

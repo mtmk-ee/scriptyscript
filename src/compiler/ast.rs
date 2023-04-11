@@ -38,6 +38,12 @@ pub enum AstNode {
         body: Box<AstNode>,
         else_body: Option<Box<AstNode>>,
     },
+    For {
+        initialization: Option<Box<AstNode>>,
+        condition: Option<Box<AstNode>>,
+        increment: Option<Box<AstNode>>,
+        body: Box<AstNode>,
+    },
     Block(Vec<AstNode>),
 }
 

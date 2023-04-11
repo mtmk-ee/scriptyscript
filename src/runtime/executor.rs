@@ -44,8 +44,8 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
         let opcode = &bytecode[pointer];
         pointer += 1;
 
-        println!("=================================");
-        println!("executing opcode: {:?}", opcode);
+        // println!("=================================");
+        // println!("executing opcode: {:?}", opcode);
 
         match opcode {
             OpCode::PushInteger(x) => {
@@ -123,6 +123,36 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 } else {
                     // TODO: exception handling
                     panic!("expected boolean condition");
+                }
+            }
+            OpCode::For {
+                initialization,
+                condition,
+                increment,
+                body,
+            } => {
+                if let Some(initialization) = initialization {
+                    execute(state, initialization);
+                }
+                loop {
+                    let condition_result = match condition {
+                        Some(condition) => {
+                            execute(state, condition);
+                            let result = state.pop().expect("no condition");
+                            result.as_bool().expect("expected boolean condition")
+                        }
+                        None => true,
+                    };
+                    if condition_result {
+                        if let ControlFlow::Return(n) = execute_impl(state, body) {
+                            return ControlFlow::Return(n);
+                        }
+                        if let Some(increment) = increment {
+                            execute(state, increment);
+                        }
+                    } else {
+                        break;
+                    }
                 }
             }
             OpCode::Duplicate => {

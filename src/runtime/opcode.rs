@@ -40,4 +40,10 @@ pub enum OpCode {
         body: Vec<OpCode>,
         else_body: Option<Vec<OpCode>>,
     },
+    For {
+        initialization: Option<Vec<OpCode>>,
+        condition: Option<Vec<OpCode>>,
+        increment: Option<Vec<OpCode>>,
+        body: Vec<OpCode>,
+    }
 }

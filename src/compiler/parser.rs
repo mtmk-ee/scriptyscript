@@ -40,11 +40,13 @@ fn parse_statements(pairs: Pairs) -> AstNode {
 pub fn parse_statement(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let pair = pairs.next().unwrap();
+    println!("{:?}", pair.as_rule());
     match pair.as_rule() {
         Rule::assign_statement => parse_assignment(pair.into_inner()),
         Rule::expression => parse_expression(pair.into_inner()),
         Rule::return_statement => parse_return(pair.into_inner()),
         Rule::if_statement => parse_if(pair.into_inner()),
+        Rule::for_statement => parse_for_statement(pair.into_inner()),
         _ => unreachable!(),
     }
 }
@@ -70,6 +72,45 @@ pub fn parse_return(pairs: Pairs) -> AstNode {
             }
         }
         None => AstNode::Return { value: None },
+    }
+}
+
+fn parse_for_statement(mut pairs: Pairs) -> AstNode {
+    let mut initialization = None;
+    let mut condition = None;
+    let mut increment = None;
+    let mut body = None;
+
+    for _ in 0..4 {
+        let pair = match pairs.next() {
+            Some(pair) => pair,
+            None => break,
+        };
+
+        match pair.as_rule() {
+            Rule::for_init => {
+                initialization = Some(Box::new(parse_assignment(pair.into_inner())));
+            }
+            Rule::for_condition => {
+                condition = Some(Box::new(parse_expression(pair.into_inner())));
+            }
+            Rule::for_increment => {
+                increment = Some(Box::new(parse_assignment(pair.into_inner())));
+            }
+            Rule::statements => {
+                body = Some(Box::new(parse_statements(pair.into_inner())));
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    let body = body.unwrap();
+
+    AstNode::For {
+        initialization,
+        condition,
+        increment,
+        body,
     }
 }
 

@@ -43,13 +43,32 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             }
             bytecode.push(OpCode::Return(n));
         }
-        AstNode::If { condition, body, else_body } => {
+        AstNode::If {
+            condition,
+            body,
+            else_body,
+        } => {
             bytecode.push(OpCode::If {
                 condition: translate_node(condition).unwrap(),
                 body: translate_node(body).unwrap(),
                 else_body: else_body
                     .as_ref()
                     .map(|else_body| translate_node(else_body).unwrap()),
+            });
+        }
+        AstNode::For {
+            initialization,
+            condition,
+            increment,
+            body,
+        } => {
+            bytecode.push(OpCode::For {
+                initialization: initialization
+                    .as_ref()
+                    .map(|node| translate_node(node).unwrap()),
+                condition: condition.as_ref().map(|node| translate_node(node).unwrap()),
+                increment: increment.as_ref().map(|node| translate_node(node).unwrap()),
+                body: translate_node(body).unwrap(),
             });
         }
         AstNode::BinaryOperation { kind, left, right } => {
