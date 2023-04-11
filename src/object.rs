@@ -118,6 +118,7 @@ pub enum ObjectValue {
 
 struct ObjectInner {
     value: Option<ObjectValue>,
+    #[allow(unused)]
     metatable: Option<Object>,
 }
 
@@ -150,7 +151,7 @@ impl Object {
     pub fn call(&self, state: &mut State, n_args: usize) -> usize {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Function(f)) => {
-                let mut args = state.pop_n(n_args);
+                let args = state.pop_n(n_args);
                 state.push_frame();
                 state.push_all(&args);
                 let push_amt = match f.borrow() {

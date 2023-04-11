@@ -1,12 +1,10 @@
 use std::{
-    cell::{Cell, RefCell},
     collections::HashMap,
-    rc::Rc,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, Mutex},
 };
 
 use crate::{
-    object::{float, int, nil, string, Function, Object},
+    object::{float, int, nil, string, Object},
     opcode::OpCode,
 };
 
@@ -142,7 +140,7 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
                 frame.lock().unwrap().push(&float(*x));
             }
             OpCode::PushString(x) => {
-                frame.lock().unwrap().push(&string(&x));
+                frame.lock().unwrap().push(&string(x));
             }
             OpCode::Store(identifier) => {
                 frame.lock().unwrap().store_local(identifier);
@@ -157,7 +155,7 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
             }
             OpCode::GetKey(key) => {
                 let table = frame.lock().unwrap().pop().unwrap();
-                let value = table.get_key(key).unwrap_or_else(|| nil());
+                let value = table.get_key(key).unwrap_or_else(nil);
                 frame.lock().unwrap().push(&value);
             }
             OpCode::Call(n) => {
