@@ -1,6 +1,3 @@
-pub mod ast;
 pub mod compiler;
-pub mod object;
-pub mod opcode;
-pub mod state;
-pub mod builtin;
+pub mod runtime;
+pub mod stdlib;

@@ -1,10 +1,9 @@
-use crate::{
-    object::{string, ObjectValue, Primitive, wrapped_function},
-    state::State,
-};
+use crate::runtime::{types::{utilities::{wrapped_function, string}, object::ObjectValue, primitive::Primitive}, state::State};
 
 
-pub fn register_builtin(state: &mut State) {
+
+
+pub fn register(state: &mut State) {
     state.set_global("print", wrapped_function(print));
     state.set_global("to_string", wrapped_function(to_string));
 }

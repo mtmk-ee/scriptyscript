@@ -1,11 +1,7 @@
 use std::io::Write;
 
 use scriptyscript::{
-    ast::parse,
-    builtin::to_string,
-    compiler::compile_node,
-    object::Primitive,
-    state::{execute, State},
+    compiler::compile, runtime::{state::State, types::primitive::Primitive, executor::execute}, stdlib::to_string,
 };
 
 /// Main entry point for the REPL.
@@ -43,8 +39,7 @@ fn display_top(state: &mut State, pushed_amt: usize) {
 /// # Errors
 /// anyhow::Error if there is a problem parsing or compiling the input.
 fn run(state: &mut State, input: &str) -> Result<usize, anyhow::Error> {
-    let ast = parse(input)?;
-    let bytecode = compile_node(&ast)?;
+    let bytecode = compile(input)?;
     let pushed_amt = execute(state, bytecode);
     Ok(pushed_amt)
 }
