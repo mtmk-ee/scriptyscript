@@ -18,6 +18,8 @@ Current language features include:
 - `if` / `else if` / `else` statements
 - Comments (single line and multi-line)
 - Arbitrary expressions
+- Tiny standard library
+    - See the [stdlib example](https://github.com/mtmk-ee/scriptyscript/blob/main/examples/stdlib.ss) for functions available
 
 Currently there is no concept of exception handling, meaning that certain
 invalid operations will cause the program to panic. Exception handling is planned
@@ -56,6 +58,8 @@ fib_7 = 13
 fib_8 = 21
 fib_9 = 34
 ```
+
+See more examples in the [`examples` folder](https://github.com/mtmk-ee/scriptyscript/tree/main/examples).
 
 ## Interactive REPL
 
