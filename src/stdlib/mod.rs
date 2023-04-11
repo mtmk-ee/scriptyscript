@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use crate::runtime::{
     executor::execute_source,
     state::State,
@@ -20,6 +22,7 @@ pub fn register(state: &mut State) {
     state.set_global("abs", wrapped_function(abs));
     state.set_global("exec", wrapped_function(exec));
     state.set_global("exit", wrapped_function(exit));
+    state.set_global("input", wrapped_function(input));
 }
 
 pub fn to_string(state: &mut State, n: usize) -> usize {
@@ -48,7 +51,7 @@ pub fn print(state: &mut State, n: usize) -> usize {
         assert_eq!(pushed, 1);
         let primitive = state.pop().unwrap().as_primitive();
         match primitive {
-            Some(Primitive::String(s)) => print!("{} ", s),
+            Some(Primitive::String(s)) => print!("{}", s),
             _ => panic!("expected string primitive"),
         }
     }
@@ -221,4 +224,30 @@ pub fn exit(state: &mut State, n: usize) -> usize {
         },
         _ => panic!("expected primitive"),
     };
+}
+
+
+pub fn input(state: &mut State, n: usize) -> usize {
+    assert!(n <= 1);
+
+    let object = state.pop().unwrap_or_else(|| string("".to_string()));
+    let inner = object.inner();
+    let value = inner.lock().unwrap();
+    let value = value.value();
+    let result = match value {
+        Some(ObjectValue::Primitive(x)) => match x {
+            Primitive::String(x) => {
+                print!("{}", x);
+                let _ = std::io::stdout().lock().flush();
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input).unwrap();
+                // remove \n and \r
+                string(&input[..input.len() - 2])
+            }
+            _ => panic!("expected string"),
+        },
+        _ => panic!("expected primitive"),
+    };
+    state.push(&result);
+    1
 }
