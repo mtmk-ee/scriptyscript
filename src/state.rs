@@ -4,8 +4,8 @@ use std::{
 };
 
 use crate::{
-    object::{float, int, nil, string, Object},
-    opcode::OpCode,
+    object::{boolean, float, int, nil, string, wrapped_function, Object, WrappedFunction},
+    opcode::OpCode, builtin,
 };
 
 pub struct CallFrame {
@@ -66,14 +66,16 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        State { stack: Vec::new() }
+        let mut result = State { stack: Vec::new() };
+        result.push_frame();
+        builtin::register_builtin(&mut result);
+        result
     }
 
     pub fn push_frame(&mut self) {
         let parent = self.current_frame();
-        self.stack.push(Arc::new(Mutex::new(CallFrame::new(
-            parent,
-        ))));
+        self.stack
+            .push(Arc::new(Mutex::new(CallFrame::new(parent))));
     }
 
     pub fn pop_frame(&mut self) {
@@ -119,6 +121,16 @@ impl State {
             .unwrap()
             .peek()
     }
+
+    pub fn set_global(&mut self, name: &str, obj: Object) {
+        self.stack
+            .get(0)
+            .expect("no global frame")
+            .lock()
+            .unwrap()
+            .locals
+            .insert(name.to_string(), obj);
+    }
 }
 
 pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
@@ -141,6 +153,9 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
             }
             OpCode::PushString(x) => {
                 frame.lock().unwrap().push(&string(x));
+            }
+            OpCode::PushBool(x) => {
+                frame.lock().unwrap().push(&boolean(*x));
             }
             OpCode::Store(identifier) => {
                 frame.lock().unwrap().store_local(identifier);
@@ -166,7 +181,24 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
                 let value = frame.lock().unwrap().peek().unwrap();
                 frame.lock().unwrap().push(&value);
             }
-            _ => todo!(),
+            opcode @ (OpCode::Add
+            | OpCode::Subtract
+            | OpCode::Multiply
+            | OpCode::Divide
+            | OpCode::Modulus) => {
+                let right = frame.lock().unwrap().pop().unwrap();
+                let left = frame.lock().unwrap().pop().unwrap();
+                let result = match opcode {
+                    OpCode::Add => left + right,
+                    OpCode::Subtract => left - right,
+                    OpCode::Multiply => left * right,
+                    OpCode::Divide => left / right,
+                    OpCode::Modulus => left % right,
+                    _ => unreachable!(),
+                }
+                .expect("operation performed on incompatible types");
+                frame.lock().unwrap().push(&result);
+            }
         }
     }
 

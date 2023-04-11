@@ -1,4 +1,4 @@
-use crate::{ast::{AstNode, Number}, opcode::OpCode};
+use crate::{ast::{AstNode, Number, BinaryOperationKind, UnaryOperationKind}, opcode::OpCode};
 
 
 
@@ -16,17 +16,21 @@ pub fn compile_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             bytecode.extend(compile_node(value).unwrap());
             bytecode.push(OpCode::Store(identifier.clone()));
         }
+        AstNode::FunctionCall { identifier, args } => {
+            args.iter().for_each(|arg| {
+                bytecode.extend(compile_node(arg).unwrap());
+            });
+            bytecode.push(OpCode::Load(identifier.clone()));
+            bytecode.push(OpCode::Call(args.len()));
+        }
         AstNode::BinaryOperation { kind, left, right } => {
             bytecode.extend(compile_node(right).unwrap());
             bytecode.extend(compile_node(left).unwrap());
-            bytecode.push(OpCode::Duplicate);
-            bytecode.push(OpCode::GetKey(kind.dunder()));
-            bytecode.push(OpCode::Call(2));
+            bytecode.push((*kind).into());
         }
         AstNode::UnaryOperation { kind, operand } => {
             bytecode.extend(compile_node(operand).unwrap());
-            bytecode.push(OpCode::GetKey(kind.dunder()));
-            bytecode.push(OpCode::Call(1));
+            bytecode.push((*kind).into());
         }
         AstNode::Identifier(identifier) => {
             bytecode.push(OpCode::Load(identifier.clone()));
@@ -46,4 +50,28 @@ pub fn compile_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
     }
 
     Ok(bytecode)
+}
+
+
+impl From<BinaryOperationKind> for OpCode {
+    fn from(kind: BinaryOperationKind) -> Self {
+        match kind {
+            BinaryOperationKind::Add => OpCode::Add,
+            BinaryOperationKind::Subtract => OpCode::Subtract,
+            BinaryOperationKind::Multiply => OpCode::Multiply,
+            BinaryOperationKind::Divide => OpCode::Divide,
+            BinaryOperationKind::Modulus => OpCode::Modulus,
+            _ => todo!(),
+        }
+    }
+}
+
+impl From<UnaryOperationKind> for OpCode {
+    fn from(kind: UnaryOperationKind) -> Self {
+        match kind {
+            // UnaryOperationKind::Negate => OpCode::Negate,
+            // UnaryOperationKind::Not => OpCode::Not,
+            _ => todo!(),
+        }
+    }
 }

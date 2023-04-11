@@ -3,3 +3,4 @@ pub mod compiler;
 pub mod object;
 pub mod opcode;
 pub mod state;
+pub mod builtin;
