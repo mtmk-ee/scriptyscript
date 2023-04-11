@@ -80,79 +80,19 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 frame.lock().unwrap().push(&value);
             }
             OpCode::Call(n) => {
-                let function = {
-                    let function = state.pop().unwrap();
-                    let function = function.inner.lock().unwrap();
-                    match &function.value {
-                        Some(ObjectValue::Function(f)) => f.clone(),
-                        _ => panic!("Cannot call non-function object"),
-                    }
-                };
-
-                let args = state.pop_n(*n);
-                state.push_frame();
-                state.push_all(&args);
-                let push_amt = match function.borrow() {
-                    Function::Wrapped(f) => f(state, *n),
-                    Function::Scripted(f) => execute(state, f.bytecode()),
-                };
-                let returns = state.pop_n(push_amt);
-                state.pop_frame();
-                state.push_all(&returns);
+                call(state, *n);
             }
             OpCode::Return(n) => {
                 return ControlFlow::Return(*n);
             }
-            OpCode::If {
-                condition,
-                body,
-                else_body,
-            } => {
-                execute(state, condition);
-                let condition = state.pop().expect("no condition");
-                if let Some(condition) = condition.as_bool() {
-                    if condition {
-                        if let ControlFlow::Return(n) = execute_impl(state, body) {
-                            return ControlFlow::Return(n);
-                        }
-                    } else if let Some(else_body) = else_body {
-                        if let ControlFlow::Return(n) = execute_impl(state, else_body) {
-                            return ControlFlow::Return(n);
-                        }
-                    }
-                } else {
-                    // TODO: exception handling
-                    panic!("expected boolean condition");
+            opcode @ OpCode::If { .. } => {
+                if let ControlFlow::Return(n) = if_statement(state, opcode) {
+                    return ControlFlow::Return(n);
                 }
             }
-            OpCode::For {
-                initialization,
-                condition,
-                increment,
-                body,
-            } => {
-                if let Some(initialization) = initialization {
-                    execute(state, initialization);
-                }
-                loop {
-                    let condition_result = match condition {
-                        Some(condition) => {
-                            execute(state, condition);
-                            let result = state.pop().expect("no condition");
-                            result.as_bool().expect("expected boolean condition")
-                        }
-                        None => true,
-                    };
-                    if condition_result {
-                        if let ControlFlow::Return(n) = execute_impl(state, body) {
-                            return ControlFlow::Return(n);
-                        }
-                        if let Some(increment) = increment {
-                            execute(state, increment);
-                        }
-                    } else {
-                        break;
-                    }
+            opcode @ OpCode::For { .. } => {
+                if let ControlFlow::Return(n) = for_loop(state, opcode) {
+                    return ControlFlow::Return(n);
                 }
             }
             OpCode::Duplicate => {
@@ -171,32 +111,9 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
             | OpCode::LessThan
             | OpCode::LessThanOrEqual
             | OpCode::And
-            | OpCode::Or) => {
-                let right = state.pop().unwrap();
-                let left = state.pop().unwrap();
-                match opcode {
-                    OpCode::Add => add(state, &left, &right),
-                    OpCode::Subtract => subtract(state, &left, &right),
-                    OpCode::Multiply => multiply(state, &left, &right),
-                    OpCode::Divide => divide(state, &left, &right),
-                    OpCode::Remainder => remainder(state, &left, &right),
-                    OpCode::Equal => equals(state, &left, &right),
-                    OpCode::NotEqual => not_equals(state, &left, &right),
-                    OpCode::GreaterThan => greater_than(state, &left, &right),
-                    OpCode::GreaterThanOrEqual => greater_than_or_equal(state, &left, &right),
-                    OpCode::LessThan => less_than(state, &left, &right),
-                    OpCode::LessThanOrEqual => less_than_or_equal(state, &left, &right),
-                    OpCode::And => and(state, &left, &right),
-                    OpCode::Or => or(state, &left, &right),
-                    _ => unreachable!(),
-                };
-            }
+            | OpCode::Or) => binary_operation(state, opcode),
             opcode @ OpCode::Negate => {
-                let value = state.pop().unwrap();
-                match opcode {
-                    OpCode::Negate => negate(state, &value),
-                    _ => unreachable!(),
-                };
+                unary_operation(state, opcode);
             }
         };
         // println!(
@@ -211,4 +128,119 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
 enum ControlFlow {
     Return(usize),
     None,
+}
+
+fn binary_operation(state: &mut State, opcode: &OpCode) {
+    let right = state.pop().unwrap();
+    let left = state.pop().unwrap();
+    match opcode {
+        OpCode::Add => add(state, &left, &right),
+        OpCode::Subtract => subtract(state, &left, &right),
+        OpCode::Multiply => multiply(state, &left, &right),
+        OpCode::Divide => divide(state, &left, &right),
+        OpCode::Remainder => remainder(state, &left, &right),
+        OpCode::Equal => equals(state, &left, &right),
+        OpCode::NotEqual => not_equals(state, &left, &right),
+        OpCode::GreaterThan => greater_than(state, &left, &right),
+        OpCode::GreaterThanOrEqual => greater_than_or_equal(state, &left, &right),
+        OpCode::LessThan => less_than(state, &left, &right),
+        OpCode::LessThanOrEqual => less_than_or_equal(state, &left, &right),
+        OpCode::And => and(state, &left, &right),
+        OpCode::Or => or(state, &left, &right),
+        _ => unreachable!(),
+    };
+}
+
+fn unary_operation(state: &mut State, opcode: &OpCode) {
+    let operand = state.pop().unwrap();
+    match opcode {
+        OpCode::Negate => negate(state, &operand),
+        _ => unreachable!(),
+    };
+}
+
+fn for_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
+    let (initialization, condition, increment, body) = match op_code {
+        OpCode::For {
+            initialization,
+            condition,
+            increment,
+            body,
+        } => (initialization, condition, increment, body),
+        _ => unreachable!(),
+    };
+    if let Some(initialization) = initialization {
+        execute(state, initialization);
+    }
+    loop {
+        let condition_result = match condition {
+            Some(condition) => {
+                execute(state, condition);
+                let result = state.pop().expect("no condition");
+                result.as_bool().expect("expected boolean condition")
+            }
+            None => true,
+        };
+        if condition_result {
+            if let ControlFlow::Return(n) = execute_impl(state, body) {
+                return ControlFlow::Return(n);
+            }
+            if let Some(increment) = increment {
+                execute(state, increment);
+            }
+        } else {
+            break;
+        }
+    }
+    ControlFlow::None
+}
+
+fn if_statement(state: &mut State, opcode: &OpCode) -> ControlFlow {
+    let (condition, body, else_body) = match opcode {
+        OpCode::If {
+            condition,
+            body,
+            else_body,
+        } => (condition, body, else_body),
+        _ => unreachable!(),
+    };
+    execute(state, condition);
+    let condition = state.pop().expect("no condition");
+    if let Some(condition) = condition.as_bool() {
+        if condition {
+            if let ControlFlow::Return(n) = execute_impl(state, body) {
+                return ControlFlow::Return(n);
+            }
+        } else if let Some(else_body) = else_body {
+            if let ControlFlow::Return(n) = execute_impl(state, else_body) {
+                return ControlFlow::Return(n);
+            }
+        }
+    } else {
+        // TODO: exception handling
+        panic!("expected boolean condition");
+    }
+    ControlFlow::None
+}
+
+fn call(state: &mut State, n: usize) {
+    let function = {
+        let function = state.pop().unwrap();
+        let function = function.inner.lock().unwrap();
+        match &function.value {
+            Some(ObjectValue::Function(f)) => f.clone(),
+            _ => panic!("Cannot call non-function object"),
+        }
+    };
+
+    let args = state.pop_n(n);
+    state.push_frame();
+    state.push_all(&args);
+    let push_amt = match function.borrow() {
+        Function::Wrapped(f) => f(state, n),
+        Function::Scripted(f) => execute(state, f.bytecode()),
+    };
+    let returns = state.pop_n(push_amt);
+    state.pop_frame();
+    state.push_all(&returns);
 }
