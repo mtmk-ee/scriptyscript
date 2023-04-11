@@ -33,6 +33,11 @@ pub enum AstNode {
     Return {
         value: Option<Box<AstNode>>,
     },
+    If {
+        condition: Box<AstNode>,
+        body: Box<AstNode>,
+        else_body: Option<Box<AstNode>>,
+    },
     Block(Vec<AstNode>),
 }
 
@@ -64,7 +69,6 @@ pub enum BinaryOperationKind {
     Power,
     And,
     Or,
-    Xor,
     Equal,
     NotEqual,
     GreaterThan,
@@ -84,7 +88,6 @@ impl BinaryOperationKind {
             BinaryOperationKind::Power => "__pow__",
             BinaryOperationKind::And => "__and__",
             BinaryOperationKind::Or => "__or__",
-            BinaryOperationKind::Xor => "__xor__",
             BinaryOperationKind::Equal => "__eq__",
             BinaryOperationKind::NotEqual => "__ne__",
             BinaryOperationKind::GreaterThan => "__gt__",

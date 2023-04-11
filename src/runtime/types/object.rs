@@ -10,7 +10,7 @@ use super::{
     function::Function,
     primitive::Primitive,
     table::Table,
-    utilities::{float, int, nil},
+    utilities::{boolean, float, int, nil},
 };
 
 #[derive(Debug, Clone)]
@@ -22,9 +22,9 @@ pub enum ObjectValue {
 
 #[derive(Debug, Clone)]
 pub struct ObjectInner {
-    value: Option<ObjectValue>,
+    pub value: Option<ObjectValue>,
     #[allow(unused)]
-    metatable: Option<Object>,
+    pub metatable: Option<Object>,
 }
 
 impl ObjectInner {
@@ -51,7 +51,7 @@ impl ObjectInner {
 
 #[derive(Clone)]
 pub struct Object {
-    inner: Arc<Mutex<ObjectInner>>,
+    pub inner: Arc<Mutex<ObjectInner>>,
 }
 
 impl Object {
@@ -72,6 +72,13 @@ impl Object {
         }
     }
 
+    pub fn as_bool(&self) -> Option<bool> {
+        match &self.inner.lock().unwrap().value {
+            Some(ObjectValue::Primitive(Primitive::Boolean(x))) => Some(*x),
+            _ => None,
+        }
+    }
+
     pub fn set_key(&mut self, key: &str, value: Object) {
         match &mut self.inner.lock().unwrap().value {
             Some(ObjectValue::Table(table)) => table.set(key.to_owned(), value),
@@ -83,25 +90,6 @@ impl Object {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Table(table)) => table.get(key).cloned(),
             _ => panic!("Cannot get key on non-table object"),
-        }
-    }
-
-    pub fn call(&self, state: &mut State, n_args: usize) -> usize {
-        match &self.inner.lock().unwrap().value {
-            Some(ObjectValue::Function(f)) => {
-                let args = state.pop_n(n_args);
-                state.push_frame();
-                state.push_all(&args);
-                let push_amt = match f.borrow() {
-                    Function::Wrapped(f) => f(state, n_args),
-                    Function::Scripted(f) => execute(state, f.bytecode().clone()),
-                };
-                let returns = state.pop_n(push_amt);
-                state.pop_frame();
-                state.push_all(&returns);
-                push_amt
-            }
-            _ => panic!("Cannot call non-function object"),
         }
     }
 }
@@ -177,5 +165,121 @@ pub fn negate(state: &mut State, obj: &Object) {
         Some(Primitive::Integer(i)) => state.push(&int(-i)),
         Some(Primitive::Float(f)) => state.push(&float(-f)),
         _ => state.push(&nil()),
+    }
+}
+
+pub fn equals(state: &mut State, a: &Object, b: &Object) {
+    let a = a.inner.lock().unwrap();
+    let b = b.inner.lock().unwrap();
+    match (&a.value, &b.value) {
+        (Some(ObjectValue::Primitive(a)), Some(ObjectValue::Primitive(b))) => {
+            state.push(&boolean(a == b))
+        }
+        (Some(ObjectValue::Table(a)), Some(ObjectValue::Table(b))) => state.push(&boolean(a == b)),
+        (Some(ObjectValue::Function(a)), Some(ObjectValue::Function(b))) => {
+            state.push(&boolean(a == b))
+        }
+        _ => state.push(&boolean(false)),
+    }
+}
+
+pub fn not_equals(state: &mut State, a: &Object, b: &Object) {
+    let a = a.inner.lock().unwrap();
+    let b = b.inner.lock().unwrap();
+    match (&a.value, &b.value) {
+        (Some(ObjectValue::Primitive(a)), Some(ObjectValue::Primitive(b))) => {
+            state.push(&boolean(a != b))
+        }
+        (Some(ObjectValue::Table(a)), Some(ObjectValue::Table(b))) => state.push(&boolean(a != b)),
+        (Some(ObjectValue::Function(a)), Some(ObjectValue::Function(b))) => {
+            state.push(&boolean(a != b))
+        }
+        _ => state.push(&boolean(true)),
+    }
+}
+
+pub fn greater_than(state: &mut State, lhs: &Object, rhs: &Object) {
+    match (lhs.as_primitive(), rhs.as_primitive()) {
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs > rhs))
+        }
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs as f64 > rhs))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs > rhs as f64))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs > rhs))
+        }
+        _ => todo!("error handling"),
+    }
+}
+
+pub fn less_than(state: &mut State, lhs: &Object, rhs: &Object) {
+    match (lhs.as_primitive(), rhs.as_primitive()) {
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs < rhs))
+        }
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean((lhs as f64) < rhs))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs < rhs as f64))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs < rhs))
+        }
+        _ => todo!("error handling"),
+    }
+}
+
+pub fn greater_than_or_equal(state: &mut State, lhs: &Object, rhs: &Object) {
+    match (lhs.as_primitive(), rhs.as_primitive()) {
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs >= rhs))
+        }
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs as f64 >= rhs))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs >= rhs as f64))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs >= rhs))
+        }
+        _ => todo!("error handling"),
+    }
+}
+
+pub fn less_than_or_equal(state: &mut State, lhs: &Object, rhs: &Object) {
+    match (lhs.as_primitive(), rhs.as_primitive()) {
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs <= rhs))
+        }
+        (Some(Primitive::Integer(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs as f64 <= rhs))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Integer(rhs))) => {
+            state.push(&boolean(lhs <= rhs as f64))
+        }
+        (Some(Primitive::Float(lhs)), Some(Primitive::Float(rhs))) => {
+            state.push(&boolean(lhs <= rhs))
+        }
+        _ => todo!("error handling"),
+    }
+}
+
+pub fn and(state: &mut State, lhs: &Object, rhs: &Object) {
+    match (lhs.as_bool(), rhs.as_bool()) {
+        (Some(a), Some(b)) => state.push(&boolean(a && b)),
+        _ => todo!("error handling"),
+    }
+}
+
+pub fn or(state: &mut State, lhs: &Object, rhs: &Object) {
+    match (lhs.as_bool(), rhs.as_bool()) {
+        (Some(a), Some(b)) => state.push(&boolean(a || b)),
+        _ => todo!("error handling"),
     }
 }

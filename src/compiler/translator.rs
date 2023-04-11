@@ -43,6 +43,15 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             }
             bytecode.push(OpCode::Return(n));
         }
+        AstNode::If { condition, body, else_body } => {
+            bytecode.push(OpCode::If {
+                condition: translate_node(condition).unwrap(),
+                body: translate_node(body).unwrap(),
+                else_body: else_body
+                    .as_ref()
+                    .map(|else_body| translate_node(else_body).unwrap()),
+            });
+        }
         AstNode::BinaryOperation { kind, left, right } => {
             bytecode.extend(translate_node(left).unwrap());
             bytecode.extend(translate_node(right).unwrap());
@@ -79,6 +88,14 @@ impl From<BinaryOperationKind> for OpCode {
             BinaryOperationKind::Multiply => OpCode::Multiply,
             BinaryOperationKind::Divide => OpCode::Divide,
             BinaryOperationKind::Remainder => OpCode::Remainder,
+            BinaryOperationKind::Equal => OpCode::Equal,
+            BinaryOperationKind::NotEqual => OpCode::NotEqual,
+            BinaryOperationKind::LessThan => OpCode::LessThan,
+            BinaryOperationKind::LessThanOrEqual => OpCode::LessThanOrEqual,
+            BinaryOperationKind::GreaterThan => OpCode::GreaterThan,
+            BinaryOperationKind::GreaterThanOrEqual => OpCode::GreaterThanOrEqual,
+            BinaryOperationKind::And => OpCode::And,
+            BinaryOperationKind::Or => OpCode::Or,
             _ => todo!(),
         }
     }

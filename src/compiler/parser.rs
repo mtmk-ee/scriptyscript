@@ -43,7 +43,8 @@ pub fn parse_statement(pairs: Pairs) -> AstNode {
     match pair.as_rule() {
         Rule::assign => parse_assignment(pair.into_inner()),
         Rule::expression => parse_expression(pair.into_inner()),
-        Rule::return_ => parse_return(pair.into_inner()),
+        Rule::return_statement => parse_return(pair.into_inner()),
+        Rule::if_statement => parse_if(pair.into_inner()),
         _ => unreachable!(),
     }
 }
@@ -82,6 +83,13 @@ fn expression_parser() -> &'static PrattParser<Rule> {
             .op(Op::infix(Rule::mul, Assoc::Left)
                 | Op::infix(Rule::div, Assoc::Left)
                 | Op::infix(Rule::rem, Assoc::Left))
+            .op(Op::infix(Rule::op_eq, Assoc::Left)
+                | Op::infix(Rule::op_neq, Assoc::Left)
+                | Op::infix(Rule::op_lt, Assoc::Left)
+                | Op::infix(Rule::op_lte, Assoc::Left)
+                | Op::infix(Rule::op_gt, Assoc::Left)
+                | Op::infix(Rule::op_gte, Assoc::Left))
+            .op(Op::infix(Rule::op_and, Assoc::Left) | Op::infix(Rule::op_or, Assoc::Left))
             .op(Op::prefix(Rule::neg) | Op::prefix(Rule::not))
     })
 }
@@ -101,33 +109,29 @@ pub fn parse_expression(pairs: Pairs) -> AstNode {
             },
             _ => unreachable!(),
         })
-        .map_infix(|lhs, op, rhs| match op.as_rule() {
-            Rule::add => AstNode::BinaryOperation {
-                kind: BinaryOperationKind::Add,
+        .map_infix(|lhs, op, rhs| {
+            let kind = match op.as_rule() {
+                Rule::add => BinaryOperationKind::Add,
+                Rule::sub => BinaryOperationKind::Subtract,
+                Rule::mul => BinaryOperationKind::Multiply,
+                Rule::div => BinaryOperationKind::Divide,
+                Rule::rem => BinaryOperationKind::Remainder,
+                Rule::op_eq => BinaryOperationKind::Equal,
+                Rule::op_neq => BinaryOperationKind::NotEqual,
+                Rule::op_lt => BinaryOperationKind::LessThan,
+                Rule::op_lte => BinaryOperationKind::LessThanOrEqual,
+                Rule::op_gt => BinaryOperationKind::GreaterThan,
+                Rule::op_gte => BinaryOperationKind::GreaterThanOrEqual,
+                Rule::op_and => BinaryOperationKind::And,
+                Rule::op_or => BinaryOperationKind::Or,
+                _ => unreachable!(),
+            };
+
+            AstNode::BinaryOperation {
+                kind,
                 left: Box::new(lhs),
                 right: Box::new(rhs),
-            },
-            Rule::sub => AstNode::BinaryOperation {
-                kind: BinaryOperationKind::Subtract,
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-            },
-            Rule::mul => AstNode::BinaryOperation {
-                kind: BinaryOperationKind::Multiply,
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-            },
-            Rule::div => AstNode::BinaryOperation {
-                kind: BinaryOperationKind::Divide,
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-            },
-            Rule::rem => AstNode::BinaryOperation {
-                kind: BinaryOperationKind::Remainder,
-                left: Box::new(lhs),
-                right: Box::new(rhs),
-            },
-            _ => unreachable!(),
+            }
         })
         .parse(pairs)
 }
@@ -175,6 +179,27 @@ pub fn parse_function_def(pairs: Pairs) -> AstNode {
     AstNode::FunctionDef {
         args,
         body: Box::new(body),
+    }
+}
+
+pub fn parse_if(pairs: Pairs) -> AstNode {
+    let mut pairs = pairs;
+    let condition = pairs.next().unwrap().into_inner();
+    let body = parse_statements(pairs.next().unwrap().into_inner());
+    let else_body = match pairs.next() {
+        Some(pair) => match pair.as_rule() {
+            Rule::elseif_clause => Some(Box::new(parse_if(pair.into_inner()))),
+            Rule::else_clause => Some(Box::new(parse_statements(
+                pair.into_inner().next().unwrap().into_inner(),
+            ))),
+            _ => unreachable!(),
+        },
+        None => None,
+    };
+    AstNode::If {
+        condition: Box::new(parse_expression(condition)),
+        body: Box::new(body),
+        else_body,
     }
 }
 

@@ -20,9 +20,24 @@ pub enum OpCode {
     Multiply,
     Divide,
     Remainder,
+
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
+    And,
+    Or,
     // Unary operations
     Negate,
 
     Call(usize),
     Return(usize),
+
+    If {
+        condition: Vec<OpCode>,
+        body: Vec<OpCode>,
+        else_body: Option<Vec<OpCode>>,
+    },
 }

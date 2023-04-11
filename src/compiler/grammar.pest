@@ -66,12 +66,20 @@ nil_literal = { "nil" }
 // Expressions
 // ============================================================================
 expression = { prefix* ~ primary ~ (infix ~ prefix* ~ primary )* }
-	infix = _{ add | sub | mul | div | rem }
+	infix = _{ add | sub | mul | div | rem | op_eq | op_neq | op_gte | op_lte | op_gt | op_lt | op_and | op_or }
     	add = { "+" }
         sub = { "-" }
         mul = { "*" }
         div = { "/" }
         rem = { "%" }
+        op_eq = { "==" }
+        op_neq = { "!=" }
+        op_gte = { ">=" }
+        op_lte = { "<=" }
+        op_gt = { ">" }
+        op_lt = { "<" }
+        op_and = { "and" }
+        op_or = { "or" }
     prefix = _{ neg }
     	neg = { "-" }
         not = { "not" }
@@ -96,7 +104,18 @@ function_call = {
 statement = {
 	assign
     | expression ~ ";"
-    | return_
+    | if_statement
+    | return_statement
 }
 assign = { identifier ~ "=" ~ expression ~ ";" }
-return_ = { "return" ~ expression? ~ ";" }
+return_statement = { "return" ~ expression? ~ ";" }
+
+if_statement = {
+    "if" ~ expression ~ block ~ (elseif_clause*) ~ (else_clause?) ~ ";"?
+}
+    elseif_clause = {
+        "else if" ~ expression ~ block
+    }
+    else_clause = {
+        "else" ~ block
+    }

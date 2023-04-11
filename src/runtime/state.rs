@@ -39,6 +39,7 @@ impl CallFrame {
     }
 
     pub fn load(&mut self, name: &str) {
+
         let local_value = self.locals.get(name).cloned();
         if let Some(x) = local_value {
             self.push(&x);

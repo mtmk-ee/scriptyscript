@@ -1,0 +1,12 @@
+
+// compute the fibonacci number N
+fib = fn(n) {
+    print(n);
+    if n <= 1 {
+        return n;
+    } else {
+        return fib(n - 1) + fib(n - 2);
+    }
+};
+
+fib(2);
