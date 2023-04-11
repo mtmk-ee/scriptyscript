@@ -97,7 +97,9 @@ control_flow_statement = _{ return_statement | if_statement | loop_statement }
     if_statement = { "if" ~ expression ~ block ~ (elseif_clause*) ~ (else_clause?) ~ ";"? }
         elseif_clause = { "else if" ~ expression ~ block }
         else_clause = { "else" ~ block }
-    loop_statement = _ { for_statement }
+    loop_statement = _ { for_statement | while_statement | inf_loop_statement }
+        while_statement = { "while" ~ expression ~ block }
+        inf_loop_statement = { "loop" ~ block }
         for_statement = {
             "for" ~ "(" ~ for_init? ~ ";" ~ for_condition? ~ ";" ~ for_increment? ~ ")" ~ block
         }

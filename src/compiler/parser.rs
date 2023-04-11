@@ -46,6 +46,8 @@ pub fn parse_statement(pairs: Pairs) -> AstNode {
         Rule::return_statement => parse_return(pair.into_inner()),
         Rule::if_statement => parse_if(pair.into_inner()),
         Rule::for_statement => parse_for_statement(pair.into_inner()),
+        Rule::while_statement => parse_while_statement(pair.into_inner()),
+        Rule::inf_loop_statement => parse_infinite_loop_statement(pair.into_inner()),
         _ => unreachable!(),
     }
 }
@@ -72,6 +74,20 @@ pub fn parse_return(pairs: Pairs) -> AstNode {
         }
         None => AstNode::Return { value: None },
     }
+}
+
+fn parse_while_statement(mut pairs: Pairs) -> AstNode {
+    let condition = parse_expression(pairs.next().unwrap().into_inner());
+    let body = parse_statements(pairs.next().unwrap().into_inner());
+    AstNode::While {
+        condition: Box::new(condition),
+        body: Box::new(body),
+    }
+}
+
+fn parse_infinite_loop_statement(mut pairs: Pairs) -> AstNode {
+    let body = parse_statements(pairs.next().unwrap().into_inner());
+    AstNode::Loop { body: Box::new(body) }
 }
 
 fn parse_for_statement(mut pairs: Pairs) -> AstNode {

@@ -45,5 +45,12 @@ pub enum OpCode {
         condition: Option<Vec<OpCode>>,
         increment: Option<Vec<OpCode>>,
         body: Vec<OpCode>,
-    }
+    },
+    While {
+        condition: Vec<OpCode>,
+        body: Vec<OpCode>,
+    },
+    Loop {
+        body: Vec<OpCode>,
+    },
 }

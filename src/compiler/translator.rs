@@ -71,6 +71,17 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
                 body: translate_node(body).unwrap(),
             });
         }
+        AstNode::While { condition, body } => {
+            bytecode.push(OpCode::While {
+                condition: translate_node(condition).unwrap(),
+                body: translate_node(body).unwrap(),
+            });
+        }
+        AstNode::Loop { body } => {
+            bytecode.push(OpCode::Loop {
+                body: translate_node(body).unwrap(),
+            });
+        }
         AstNode::BinaryOperation { kind, left, right } => {
             bytecode.extend(translate_node(left).unwrap());
             bytecode.extend(translate_node(right).unwrap());

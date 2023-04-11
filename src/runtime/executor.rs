@@ -95,6 +95,16 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                     return ControlFlow::Return(n);
                 }
             }
+            opcode @ OpCode::While { .. } => {
+                if let ControlFlow::Return(n) = while_loop(state, opcode) {
+                    return ControlFlow::Return(n);
+                }
+            }
+            opcode @ OpCode::Loop { .. } => {
+                if let ControlFlow::Return(n) = infinite_loop(state, opcode) {
+                    return ControlFlow::Return(n);
+                }
+            }
             OpCode::Duplicate => {
                 let value = frame.lock().unwrap().peek().unwrap();
                 frame.lock().unwrap().push(&value);
@@ -193,6 +203,38 @@ fn for_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
         }
     }
     ControlFlow::None
+}
+
+fn while_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
+    let (condition, body) = match op_code {
+        OpCode::While { condition, body } => (condition, body),
+        _ => unreachable!(),
+    };
+    loop {
+        execute(state, condition);
+        let condition_result = state.pop().expect("no condition");
+        if let Some(condition_result) = condition_result.as_bool() {
+            if condition_result {
+                if let ControlFlow::Return(n) = execute_impl(state, body) {
+                    break ControlFlow::Return(n);
+                }
+            } else {
+                break ControlFlow::None;
+            }
+        }
+    }
+}
+
+fn infinite_loop(state: &mut State, op_code: &OpCode) -> ControlFlow {
+    let body = match op_code {
+        OpCode::Loop { body } => body,
+        _ => unreachable!(),
+    };
+    loop {
+        if let ControlFlow::Return(n) = execute_impl(state, body) {
+            break ControlFlow::Return(n);
+        }
+    }
 }
 
 fn if_statement(state: &mut State, opcode: &OpCode) -> ControlFlow {

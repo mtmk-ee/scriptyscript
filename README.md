@@ -2,28 +2,59 @@
 
 A small but fun toy scripting language written in Rust.
 
+It's not fast, and it eats more memory than it should, but it's fun to play with!
+
+## Language Features
+
+Current language features include:
+- Variables
+- Functions
+    - Recursion
+    - Bindings for Rust-side functions
+- Loops
+    - `while`
+    - `for`
+    - `loop` (infinite loop)
+- If/else-if/else statements
+- Comments (single line and multi-line)
+- Arbitrary expressions
+
+Currently there is no concept of exception handling, meaning that certain
+invalid operations will cause the program to panic. Exception handling is planned
+for the future.
+
+
 ## Language Example
 
 The syntax is very simple and similar to other languages.
 
 This code:
 ```
-print_hello = fn() {
-    print("Hello there!");
+fib = fn(n) {
+    if n <= 1 {
+        return n;
+    } else {
+        return fib(n - 1) + fib(n - 2);
+    }
 };
 
-multiply_numbers = fn(a, b, c) {
-    return a * b * c;
-};
-
-print_hello();
-print("The product is: " + to_string(multiply_numbers(2, 3, 4)));
+for (n = 0; n < 10; n = n + 1) {
+    print("fib_" + to_string(n) + " = " + to_string(fib(n)));
+}
 ```
 
 Will output:
 ```
-Hello there!
-The product is: 24
+fib_0 = 0
+fib_1 = 1
+fib_2 = 1
+fib_3 = 2
+fib_4 = 3
+fib_5 = 5
+fib_6 = 8
+fib_7 = 13
+fib_8 = 21
+fib_9 = 34
 ```
 
 ## Interactive REPL

@@ -44,6 +44,13 @@ pub enum AstNode {
         increment: Option<Box<AstNode>>,
         body: Box<AstNode>,
     },
+    While {
+        condition: Box<AstNode>,
+        body: Box<AstNode>,
+    },
+    Loop {
+        body: Box<AstNode>,
+    },
     Block(Vec<AstNode>),
 }
 
