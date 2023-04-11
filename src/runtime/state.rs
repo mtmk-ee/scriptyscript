@@ -131,3 +131,9 @@ impl State {
             .insert(name.to_string(), obj);
     }
 }
+
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
+    }
+}

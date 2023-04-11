@@ -22,3 +22,9 @@ impl Table {
         self.inner.insert(key, value);
     }
 }
+
+impl Default for Table {
+    fn default() -> Self {
+        Self::new()
+    }
+}

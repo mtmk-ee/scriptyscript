@@ -19,7 +19,7 @@ pub struct GrammarParser {}
 ///
 /// # Errors
 /// Returns a [`pest::error::Error`] if the string cannot be parsed.
-pub fn parse(s: impl AsRef<str>) -> Result<AstNode, pest::error::Error<Rule>> {
+pub fn parse(s: impl AsRef<str>) -> Result<AstNode, Box<pest::error::Error<Rule>>> {
     let mut pairs = GrammarParser::parse(Rule::script, s.as_ref())?;
     Ok(parse_block(pairs.next().unwrap().into_inner()))
 }
