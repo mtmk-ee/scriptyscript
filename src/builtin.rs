@@ -16,11 +16,11 @@ pub fn to_string(state: &mut State, n: usize) -> usize {
     let value = value.value();
     let result = match value {
         Some(ObjectValue::Primitive(x)) => string(x.to_string()),
-        Some(ObjectValue::Function(_)) => string("function".to_string()),
+        Some(ObjectValue::Function(_)) => string("function"),
         Some(ObjectValue::Table(_)) => {
             todo!(); // need to invoke __str__
         }
-        None => string("nil".to_string()),
+        None => string("nil"),
     };
     state.push(&result);
     n

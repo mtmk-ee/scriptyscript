@@ -53,7 +53,7 @@ fn display_top(state: &mut State, pushed_amt: usize) {
 /// # Errors
 /// anyhow::Error if there is a problem parsing or compiling the input.
 fn run(state: &mut State, input: &str) -> Result<usize, anyhow::Error> {
-    let ast = timeit!("parsing", parse(&input))?;
+    let ast = timeit!("parsing", parse(input))?;
     let bytecode = timeit!("compilation", compile_node(&ast))?;
     let pushed_amt = timeit!("execution", execute(state, bytecode));
     Ok(pushed_amt)
@@ -67,7 +67,7 @@ fn next_statement() -> String {
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).unwrap();
     input = input.trim_end().to_owned();
-    if !input.ends_with(";") {
+    if !input.ends_with(';') {
         input.push(';');
     }
     input

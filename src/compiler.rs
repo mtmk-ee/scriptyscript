@@ -67,11 +67,7 @@ impl From<BinaryOperationKind> for OpCode {
 }
 
 impl From<UnaryOperationKind> for OpCode {
-    fn from(kind: UnaryOperationKind) -> Self {
-        match kind {
-            // UnaryOperationKind::Negate => OpCode::Negate,
-            // UnaryOperationKind::Not => OpCode::Not,
-            _ => todo!(),
-        }
+    fn from(_kind: UnaryOperationKind) -> Self {
+        todo!()
     }
 }
