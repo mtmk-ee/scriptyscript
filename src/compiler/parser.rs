@@ -136,18 +136,19 @@ fn parse_for_statement(mut pairs: Pairs) -> AstNode {
 /// The expression parser is a singleton, so it will only be created once.
 fn expression_parser() -> &'static PrattParser<Rule> {
     EXPRESSION_PARSER.get_or_init(|| {
+        // Infix operators are listed in order of increasing precedence
         PrattParser::new()
-            .op(Op::infix(Rule::add, Assoc::Left) | Op::infix(Rule::sub, Assoc::Left))
-            .op(Op::infix(Rule::mul, Assoc::Left)
-                | Op::infix(Rule::div, Assoc::Left)
-                | Op::infix(Rule::rem, Assoc::Left))
+            .op(Op::infix(Rule::op_and, Assoc::Left) | Op::infix(Rule::op_or, Assoc::Left))
             .op(Op::infix(Rule::op_eq, Assoc::Left)
                 | Op::infix(Rule::op_neq, Assoc::Left)
                 | Op::infix(Rule::op_lt, Assoc::Left)
                 | Op::infix(Rule::op_lte, Assoc::Left)
                 | Op::infix(Rule::op_gt, Assoc::Left)
                 | Op::infix(Rule::op_gte, Assoc::Left))
-            .op(Op::infix(Rule::op_and, Assoc::Left) | Op::infix(Rule::op_or, Assoc::Left))
+            .op(Op::infix(Rule::add, Assoc::Left) | Op::infix(Rule::sub, Assoc::Left))
+            .op(Op::infix(Rule::mul, Assoc::Left)
+                | Op::infix(Rule::div, Assoc::Left)
+                | Op::infix(Rule::rem, Assoc::Left))
             .op(Op::prefix(Rule::neg) | Op::prefix(Rule::not))
     })
 }
