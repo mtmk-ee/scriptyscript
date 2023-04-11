@@ -40,7 +40,6 @@ fn parse_statements(pairs: Pairs) -> AstNode {
 pub fn parse_statement(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let pair = pairs.next().unwrap();
-    println!("{:?}", pair.as_rule());
     match pair.as_rule() {
         Rule::assign_statement => parse_assignment(pair.into_inner()),
         Rule::expression => parse_expression(pair.into_inner()),
