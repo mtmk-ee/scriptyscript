@@ -24,8 +24,8 @@ pub fn compile_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             bytecode.push(OpCode::Call(args.len()));
         }
         AstNode::BinaryOperation { kind, left, right } => {
-            bytecode.extend(compile_node(right).unwrap());
             bytecode.extend(compile_node(left).unwrap());
+            bytecode.extend(compile_node(right).unwrap());
             bytecode.push((*kind).into());
         }
         AstNode::UnaryOperation { kind, operand } => {
@@ -68,6 +68,9 @@ impl From<BinaryOperationKind> for OpCode {
 
 impl From<UnaryOperationKind> for OpCode {
     fn from(_kind: UnaryOperationKind) -> Self {
-        todo!()
+        match _kind {
+            UnaryOperationKind::Negate => OpCode::Negate,
+            _ => todo!(),
+        }
     }
 }

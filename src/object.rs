@@ -2,6 +2,7 @@ use std::{
     borrow::Borrow,
     collections::HashMap,
     fmt::{Debug, Formatter},
+    ops::Add,
     sync::{Arc, Mutex},
 };
 
@@ -91,6 +92,7 @@ pub enum Primitive {
     String(String),
     Boolean(bool),
 }
+
 impl Eq for Primitive {}
 impl PartialEq for Primitive {
     fn eq(&self, other: &Self) -> bool {
@@ -105,6 +107,77 @@ impl PartialEq for Primitive {
     }
 }
 
+impl Add for Primitive {
+    type Output = Option<Primitive>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Primitive::Integer(a), Primitive::Integer(b)) => Some(Primitive::Integer(a + b)),
+            (Primitive::Integer(a), Primitive::Float(b)) => Some(Primitive::Float(a as f64 + b)),
+            (Primitive::Float(a), Primitive::Integer(b)) => Some(Primitive::Float(a + b as f64)),
+            (Primitive::Float(a), Primitive::Float(b)) => Some(Primitive::Float(a + b)),
+            (Primitive::String(a), Primitive::String(b)) => Some(Primitive::String(a + b.as_str())),
+            _ => None,
+        }
+    }
+}
+
+impl std::ops::Sub for Primitive {
+    type Output = Option<Primitive>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Primitive::Integer(a), Primitive::Integer(b)) => Some(Primitive::Integer(a - b)),
+            (Primitive::Integer(a), Primitive::Float(b)) => Some(Primitive::Float(a as f64 - b)),
+            (Primitive::Float(a), Primitive::Integer(b)) => Some(Primitive::Float(a - b as f64)),
+            (Primitive::Float(a), Primitive::Float(b)) => Some(Primitive::Float(a - b)),
+            _ => None,
+        }
+    }
+}
+
+impl std::ops::Mul for Primitive {
+    type Output = Option<Primitive>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Primitive::Integer(a), Primitive::Integer(b)) => Some(Primitive::Integer(a * b)),
+            (Primitive::Integer(a), Primitive::Float(b)) => Some(Primitive::Float(a as f64 * b)),
+            (Primitive::Float(a), Primitive::Integer(b)) => Some(Primitive::Float(a * b as f64)),
+            (Primitive::Float(a), Primitive::Float(b)) => Some(Primitive::Float(a * b)),
+            _ => None,
+        }
+    }
+}
+
+impl std::ops::Div for Primitive {
+    type Output = Option<Primitive>;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Primitive::Integer(a), Primitive::Integer(b)) => Some(Primitive::Integer(a / b)),
+            (Primitive::Integer(a), Primitive::Float(b)) => Some(Primitive::Float(a as f64 / b)),
+            (Primitive::Float(a), Primitive::Integer(b)) => Some(Primitive::Float(a / b as f64)),
+            (Primitive::Float(a), Primitive::Float(b)) => Some(Primitive::Float(a / b)),
+            _ => None,
+        }
+    }
+}
+
+impl std::ops::Rem for Primitive {
+    type Output = Option<Primitive>;
+
+    fn rem(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Primitive::Integer(a), Primitive::Integer(b)) => Some(Primitive::Integer(a % b)),
+            (Primitive::Integer(a), Primitive::Float(b)) => Some(Primitive::Float(a as f64 % b)),
+            (Primitive::Float(a), Primitive::Integer(b)) => Some(Primitive::Float(a % b as f64)),
+            (Primitive::Float(a), Primitive::Float(b)) => Some(Primitive::Float(a % b)),
+            _ => None,
+        }
+    }
+}
+
 impl ToString for Primitive {
     fn to_string(&self) -> String {
         match self {
@@ -113,69 +186,6 @@ impl ToString for Primitive {
             Primitive::Float(f) => f.to_string(),
             Primitive::String(s) => s.to_string(),
             Primitive::Boolean(b) => b.to_string(),
-        }
-    }
-}
-
-impl std::ops::Add for Object {
-    type Output = Option<Object>;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        match (self.as_primitive(), rhs.as_primitive()) {
-            (Some(Primitive::Integer(a)), Some(Primitive::Integer(b))) => Some(int(a + b)),
-            (Some(Primitive::Float(a)), Some(Primitive::Float(b))) => Some(float(a + b)),
-            (Some(Primitive::String(a)), Some(Primitive::String(b))) => {
-                Some(string(a + b.as_str()))
-            }
-            _ => None,
-        }
-    }
-}
-
-impl std::ops::Sub for Object {
-    type Output = Option<Object>;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        match (self.as_primitive(), rhs.as_primitive()) {
-            (Some(Primitive::Integer(a)), Some(Primitive::Integer(b))) => Some(int(a - b)),
-            (Some(Primitive::Float(a)), Some(Primitive::Float(b))) => Some(float(a - b)),
-            _ => None,
-        }
-    }
-}
-
-impl std::ops::Mul for Object {
-    type Output = Option<Object>;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        match (self.as_primitive(), rhs.as_primitive()) {
-            (Some(Primitive::Integer(a)), Some(Primitive::Integer(b))) => Some(int(a * b)),
-            (Some(Primitive::Float(a)), Some(Primitive::Float(b))) => Some(float(a * b)),
-            _ => None,
-        }
-    }
-}
-
-impl std::ops::Div for Object {
-    type Output = Option<Object>;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        match (self.as_primitive(), rhs.as_primitive()) {
-            (Some(Primitive::Integer(a)), Some(Primitive::Integer(b))) => Some(int(a / b)),
-            (Some(Primitive::Float(a)), Some(Primitive::Float(b))) => Some(float(a / b)),
-            _ => None,
-        }
-    }
-}
-
-impl std::ops::Rem for Object {
-    type Output = Option<Object>;
-
-    fn rem(self, rhs: Self) -> Self::Output {
-        match (self.as_primitive(), rhs.as_primitive()) {
-            (Some(Primitive::Integer(a)), Some(Primitive::Integer(b))) => Some(int(a % b)),
-            (Some(Primitive::Float(a)), Some(Primitive::Float(b))) => Some(float(a % b)),
-            _ => None,
         }
     }
 }
@@ -357,4 +367,47 @@ pub fn table() -> Object {
 
 pub fn boolean(x: bool) -> Object {
     Object::new(Some(ObjectValue::Primitive(Primitive::Boolean(x))), None)
+}
+
+
+fn binary_op(state: &mut State, lhs: &Object, rhs: &Object, primitive_op: fn(Primitive, Primitive) -> Option<Primitive>) {
+    match (lhs.as_primitive(), rhs.as_primitive()) {
+        (Some(a), Some(b)) => {
+            let result = if let Some(result) = primitive_op(a, b) {
+                Object::new(Some(ObjectValue::Primitive(result)), None)
+            } else {
+                nil()
+            };
+            state.push(&result);
+        }
+        _ => todo!(),
+    }
+}
+
+pub fn add(state: &mut State, lhs: &Object, rhs: &Object) {
+    binary_op(state, lhs, rhs, std::ops::Add::add);
+}
+
+pub fn subtract(state: &mut State, lhs: &Object, rhs: &Object) {
+    binary_op(state, lhs, rhs, std::ops::Sub::sub);
+}
+
+pub fn multiply(state: &mut State, lhs: &Object, rhs: &Object) {
+    binary_op(state, lhs, rhs, std::ops::Mul::mul);
+}
+
+pub fn divide(state: &mut State, lhs: &Object, rhs: &Object) {
+    binary_op(state, lhs, rhs, std::ops::Div::div);
+}
+
+pub fn remainder(state: &mut State, lhs: &Object, rhs: &Object) {
+    binary_op(state, lhs, rhs, std::ops::Rem::rem);
+}
+
+pub fn negate(state: &mut State, obj: &Object) {
+    match obj.as_primitive() {
+        Some(Primitive::Integer(i)) => state.push(&int(-i)),
+        Some(Primitive::Float(f)) => state.push(&float(-f)),
+        _ => state.push(&nil())
+    }
 }

@@ -19,6 +19,8 @@ pub enum OpCode {
     Multiply,
     Divide,
     Modulus,
+    // Unary operations
+    Negate,
 
     Call(usize),
 }

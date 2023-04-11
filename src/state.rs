@@ -5,7 +5,10 @@ use std::{
 
 use crate::{
     builtin,
-    object::{boolean, float, int, nil, string, Object},
+    object::{
+        add, boolean, divide, float, int, multiply, negate, nil, remainder, string, subtract,
+        Object,
+    },
     opcode::OpCode,
 };
 
@@ -189,16 +192,21 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
             | OpCode::Modulus) => {
                 let right = frame.lock().unwrap().pop().unwrap();
                 let left = frame.lock().unwrap().pop().unwrap();
-                let result = match opcode {
-                    OpCode::Add => left + right,
-                    OpCode::Subtract => left - right,
-                    OpCode::Multiply => left * right,
-                    OpCode::Divide => left / right,
-                    OpCode::Modulus => left % right,
+                match opcode {
+                    OpCode::Add => add(state, &left, &right),
+                    OpCode::Subtract => subtract(state, &left, &right),
+                    OpCode::Multiply => multiply(state, &left, &right),
+                    OpCode::Divide => divide(state, &left, &right),
+                    OpCode::Modulus => remainder(state, &left, &right),
                     _ => unreachable!(),
-                }
-                .expect("operation performed on incompatible types");
-                frame.lock().unwrap().push(&result);
+                };
+            }
+            opcode @ OpCode::Negate => {
+                let value = frame.lock().unwrap().pop().unwrap();
+                match opcode {
+                    OpCode::Negate => negate(state, &value),
+                    _ => unreachable!(),
+                };
             }
         }
     }
