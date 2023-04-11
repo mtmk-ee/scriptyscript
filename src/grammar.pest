@@ -1,0 +1,84 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT = _{
+    "/*" ~ (!"*/" ~ ANY)* ~ "*/"
+    | "//" ~ (!("\r" | "\n") ~ ANY)* ~ ("\r" | "\n" | EOI)
+}
+
+identifier = @{
+    !keyword ~ ASCII_ALPHA ~ (ASCII_ALPHA | ASCII_DIGIT)*
+}
+
+keyword = @{
+    "if" | "else" | "while" | "for" | "break" | "continue" | "return"
+    | "fn" | "class"
+    | "and" | "or" | "not"
+}
+
+block = {
+	statement+
+}
+
+script = _{
+	SOI ~ block ~ EOI
+}
+
+// ============================================================================
+// Literals
+// ============================================================================
+// Numbers
+number = _{
+	scinot_literal
+    | float_literal
+    | bin_literal
+    | hex_literal
+    | dec_literal
+}
+scinot_literal = @{ sign? ~ dec_literal ~ ("." ~ dec_literal)? ~ ("e" | "E") ~ dec_literal  }
+float_literal = @{ sign? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+dec_literal = @{ sign? ~ ASCII_DIGIT+ }
+hex_literal = @{ sign? ~ ("0x" | "0X") ~ ASCII_HEX_DIGIT+ }
+bin_literal = @{ sign? ~ ("0b" | "0b") ~ ASCII_BIN_DIGIT+ }
+sign = _{ "+" | "-" }
+
+// Strings
+string_literal = ${ "\"" ~ inner ~ "\"" }
+inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "n" | "r" | "t") // escaped characters
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4}) // unicode escape char
+}
+
+bool_literal = { "true" | "false" }
+nil_literal = { "nil" }
+
+// ============================================================================
+// Expressions
+// ============================================================================
+expression = { prefix* ~ primary ~ (infix ~ prefix* ~ primary )* }
+	infix = _{ add | sub | mul | div }
+    	add = { "+" }
+        sub = { "-" }
+        mul = { "*" }
+        div = { "/" }
+    prefix = _{ neg }
+    	neg = { "-" }
+        not = { "not" }
+    primary = _{
+        number
+        | string_literal
+        | bool_literal
+        | nil_literal
+        | identifier
+        | "(" ~ expression ~ ")"
+    }
+
+
+
+// ============================================================================
+// Statements
+// ============================================================================
+statement = {
+	assign
+}
+assign = { identifier ~ "=" ~ expression ~ ";" }
