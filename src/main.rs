@@ -1,4 +1,4 @@
-use std::{io::Write, time::Instant};
+use std::io::Write;
 
 use scriptyscript::{
     ast::parse,
@@ -8,16 +8,6 @@ use scriptyscript::{
     state::{execute, State},
 };
 
-/// Fun macro for timing an expression
-macro_rules! timeit {
-    ($name:expr, $expr:expr) => {{
-        let start = Instant::now();
-        let result = $expr;
-        println!("{}: {} us", $name, start.elapsed().as_micros());
-        result
-    }};
-}
-
 /// Main entry point for the REPL.
 fn repl() {
     let mut state = State::new();
@@ -25,7 +15,7 @@ fn repl() {
     loop {
         let input = next_statement();
 
-        let pushed_amt = timeit!("total (including prints)", run(&mut state, &input));
+        let pushed_amt = run(&mut state, &input);
         if let Err(e) = pushed_amt {
             println!("Error: {}", e);
             continue;
@@ -53,9 +43,9 @@ fn display_top(state: &mut State, pushed_amt: usize) {
 /// # Errors
 /// anyhow::Error if there is a problem parsing or compiling the input.
 fn run(state: &mut State, input: &str) -> Result<usize, anyhow::Error> {
-    let ast = timeit!("parsing", parse(input))?;
-    let bytecode = timeit!("compilation", compile_node(&ast))?;
-    let pushed_amt = timeit!("execution", execute(state, bytecode));
+    let ast = parse(input)?;
+    let bytecode = compile_node(&ast)?;
+    let pushed_amt = execute(state, bytecode);
     Ok(pushed_amt)
 }
 
