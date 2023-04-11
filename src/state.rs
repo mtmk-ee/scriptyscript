@@ -189,7 +189,7 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
             | OpCode::Subtract
             | OpCode::Multiply
             | OpCode::Divide
-            | OpCode::Modulus) => {
+            | OpCode::Remainder) => {
                 let right = frame.lock().unwrap().pop().unwrap();
                 let left = frame.lock().unwrap().pop().unwrap();
                 match opcode {
@@ -197,7 +197,7 @@ pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
                     OpCode::Subtract => subtract(state, &left, &right),
                     OpCode::Multiply => multiply(state, &left, &right),
                     OpCode::Divide => divide(state, &left, &right),
-                    OpCode::Modulus => remainder(state, &left, &right),
+                    OpCode::Remainder => remainder(state, &left, &right),
                     _ => unreachable!(),
                 };
             }

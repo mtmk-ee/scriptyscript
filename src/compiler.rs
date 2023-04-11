@@ -2,7 +2,10 @@ use crate::{ast::{AstNode, Number, BinaryOperationKind, UnaryOperationKind}, opc
 
 
 
-
+/// Compiles an AST node into a list of opcodes which can be executed on a state.
+///
+/// # Errors
+/// Returns an error if the AST node could not be compiled.
 pub fn compile_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
     let mut bytecode = Vec::new();
 
@@ -54,19 +57,23 @@ pub fn compile_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
 
 
 impl From<BinaryOperationKind> for OpCode {
+
+    /// Convert a [`BinaryOperationKind`] into its matching [`OpCode`].
     fn from(kind: BinaryOperationKind) -> Self {
         match kind {
             BinaryOperationKind::Add => OpCode::Add,
             BinaryOperationKind::Subtract => OpCode::Subtract,
             BinaryOperationKind::Multiply => OpCode::Multiply,
             BinaryOperationKind::Divide => OpCode::Divide,
-            BinaryOperationKind::Modulus => OpCode::Modulus,
+            BinaryOperationKind::Remainder => OpCode::Remainder,
             _ => todo!(),
         }
     }
 }
 
 impl From<UnaryOperationKind> for OpCode {
+
+    /// Convert a [`UnaryOperationKind`] into its matching [`OpCode`].
     fn from(_kind: UnaryOperationKind) -> Self {
         match _kind {
             UnaryOperationKind::Negate => OpCode::Negate,

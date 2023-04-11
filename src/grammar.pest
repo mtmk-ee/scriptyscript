@@ -56,11 +56,12 @@ nil_literal = { "nil" }
 // Expressions
 // ============================================================================
 expression = { prefix* ~ primary ~ (infix ~ prefix* ~ primary )* }
-	infix = _{ add | sub | mul | div }
+	infix = _{ add | sub | mul | div | rem }
     	add = { "+" }
         sub = { "-" }
         mul = { "*" }
         div = { "/" }
+        rem = { "%" }
     prefix = _{ neg }
     	neg = { "-" }
         not = { "not" }
