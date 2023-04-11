@@ -275,7 +275,7 @@ pub fn parse_number_literal(pair: Pair) -> Number {
 /// Parse a string literal into a `String`.
 pub fn parse_string_literal(pair: Pair) -> String {
     let token = pair.as_str();
-    token[1..token.len() - 1].to_string()
+    unescape::unescape(&token[1..token.len() - 1]).unwrap()
 }
 
 /// Parse a boolean literal into a bool.
