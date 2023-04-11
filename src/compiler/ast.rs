@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub enum AstNode {
     Identifier(String),
     NumberLiteral(Number),
+    NilLiteral,
     StringLiteral(String),
     BooleanLiteral(bool),
     FunctionCall {

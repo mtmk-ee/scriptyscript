@@ -82,16 +82,19 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 frame.lock().unwrap().push(&int(*x));
             }
             OpCode::PushFloat(x) => {
-                frame.lock().unwrap().push(&float(*x));
+                state.push(&float(*x));
             }
             OpCode::PushString(x) => {
-                frame.lock().unwrap().push(&string(x));
+                state.push(&string(x));
             }
             OpCode::PushBool(x) => {
-                frame.lock().unwrap().push(&boolean(*x));
+                state.push(&boolean(*x));
             }
             OpCode::PushFunction(x) => {
-                frame.lock().unwrap().push(&scripted_function(x.clone()));
+                state.push(&scripted_function(x.clone()));
+            }
+            OpCode::PushNil => {
+                state.push(&nil());
             }
             OpCode::Store(identifier) => {
                 frame.lock().unwrap().store_local(identifier);
@@ -105,9 +108,9 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 table_obj.set_key(key, value);
             }
             OpCode::GetKey(key) => {
-                let table = frame.lock().unwrap().pop().unwrap();
+                let table = state.pop().unwrap();
                 let value = table.get_key(key).unwrap_or_else(nil);
-                frame.lock().unwrap().push(&value);
+                state.push(&value);
             }
             OpCode::Call(n) => {
                 call(state, *n);

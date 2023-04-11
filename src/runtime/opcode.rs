@@ -8,6 +8,7 @@ pub enum OpCode {
     SetKey(String),
     Duplicate,
 
+    PushNil,
     PushString(String),
     PushInteger(i64),
     PushFloat(f64),

@@ -110,6 +110,9 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
         AstNode::BooleanLiteral(boolean) => {
             bytecode.push(OpCode::PushBool(*boolean));
         }
+        AstNode::NilLiteral => {
+            bytecode.push(OpCode::PushNil);
+        }
     }
 
     Ok(bytecode)

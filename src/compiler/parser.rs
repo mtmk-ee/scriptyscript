@@ -89,7 +89,9 @@ fn parse_while_statement(mut pairs: Pairs) -> AstNode {
 
 fn parse_infinite_loop_statement(mut pairs: Pairs) -> AstNode {
     let body = parse_statements(pairs.next().unwrap().into_inner());
-    AstNode::Loop { body: Box::new(body) }
+    AstNode::Loop {
+        body: Box::new(body),
+    }
 }
 
 fn parse_for_statement(mut pairs: Pairs) -> AstNode {
@@ -206,6 +208,7 @@ pub fn parse_expression_primary(pair: Pair) -> AstNode {
         | Rule::bin_literal
         | Rule::float_literal
         | Rule::scinot_literal => AstNode::NumberLiteral(parse_number_literal(pair)),
+        Rule::nil_literal => AstNode::NilLiteral,
         Rule::string_literal => AstNode::StringLiteral(parse_string_literal(pair)),
         Rule::bool_literal => AstNode::BooleanLiteral(parse_boolean_literal(pair)),
         Rule::expression => parse_expression(pair.into_inner()),
