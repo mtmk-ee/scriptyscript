@@ -69,16 +69,20 @@ expression = { prefix* ~ primary ~ (infix ~ prefix* ~ primary )* }
         | string_literal
         | bool_literal
         | nil_literal
+        | function_call
         | identifier
         | "(" ~ expression ~ ")"
     }
 
-
+function_call = {
+    identifier ~ "(" ~ (expression ~ ("," ~ expression)*)? ~ ")"
+}
 
 // ============================================================================
 // Statements
 // ============================================================================
 statement = {
 	assign
+    | expression ~ ";"
 }
 assign = { identifier ~ "=" ~ expression ~ ";" }
