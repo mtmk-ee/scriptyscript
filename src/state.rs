@@ -4,8 +4,9 @@ use std::{
 };
 
 use crate::{
-    object::{boolean, float, int, nil, string, wrapped_function, Object, WrappedFunction},
-    opcode::OpCode, builtin,
+    builtin,
+    object::{boolean, float, int, nil, string, Object},
+    opcode::OpCode,
 };
 
 pub struct CallFrame {
