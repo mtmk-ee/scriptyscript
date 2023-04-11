@@ -1,3 +1,5 @@
+use crate::compiler::compile;
+
 use super::{
     opcode::OpCode,
     state::State,
@@ -6,6 +8,18 @@ use super::{
         utilities::{boolean, float, int, nil, string},
     },
 };
+
+/// Parse, compile, and run the input string on the given state.
+///
+/// Returns the number of objects pushed onto the stack.
+///
+/// # Errors
+/// anyhow::Error if there is a problem parsing or compiling the input.
+pub fn execute_source(state: &mut State, input: &str) -> Result<usize, anyhow::Error> {
+    let bytecode = compile(input)?;
+    let pushed_amt = execute(state, bytecode);
+    Ok(pushed_amt)
+}
 
 pub fn execute(state: &mut State, bytecode: Vec<OpCode>) -> usize {
     let frame = state.current_frame().expect("no call frame");
