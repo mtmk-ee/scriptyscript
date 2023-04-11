@@ -35,6 +35,7 @@ pub fn parse_statement(pairs: Pairs) -> AstNode {
     let pair = pairs.next().unwrap();
     match pair.as_rule() {
         Rule::assign => parse_assignment(pair.into_inner()),
+        Rule::expression => parse_expression(pair.into_inner()),
         _ => unreachable!(),
     }
 }
@@ -109,7 +110,17 @@ pub fn parse_expression_primary(pair: Pair) -> AstNode {
         Rule::string_literal => AstNode::StringLiteral(parse_string_literal(pair)),
         Rule::bool_literal => AstNode::BooleanLiteral(parse_boolean_literal(pair)),
         Rule::expression => parse_expression(pair.into_inner()),
+        Rule::function_call => parse_function_call(pair.into_inner()),
         _ => unreachable!(),
+    }
+}
+
+pub fn parse_function_call(pairs: Pairs) -> AstNode {
+    let mut pairs = pairs;
+    let identifier = pairs.next().unwrap().as_str().to_string();
+    AstNode::FunctionCall {
+        identifier,
+        args: pairs.map(|pair| parse_expression(pair.into_inner())).collect(),
     }
 }
 
@@ -138,6 +149,10 @@ pub enum AstNode {
     NumberLiteral(Number),
     StringLiteral(String),
     BooleanLiteral(bool),
+    FunctionCall {
+        identifier: String,
+        args: Vec<AstNode>,
+    },
     UnaryOperation {
         kind: UnaryOperationKind,
         operand: Box<AstNode>,
@@ -176,7 +191,7 @@ pub enum BinaryOperationKind {
     Subtract,
     Multiply,
     Divide,
-    Modulo,
+    Modulus,
     Power,
     And,
     Or,
@@ -196,7 +211,7 @@ impl BinaryOperationKind {
             BinaryOperationKind::Subtract => "__sub__",
             BinaryOperationKind::Multiply => "__mul__",
             BinaryOperationKind::Divide => "__div__",
-            BinaryOperationKind::Modulo => "__mod__",
+            BinaryOperationKind::Modulus => "__mod__",
             BinaryOperationKind::Power => "__pow__",
             BinaryOperationKind::And => "__and__",
             BinaryOperationKind::Or => "__or__",
