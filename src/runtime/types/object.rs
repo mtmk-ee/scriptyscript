@@ -3,13 +3,10 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::runtime::{state::State};
-
 use super::{
     function::Function,
     primitive::Primitive,
     table::Table,
-    utilities::{boolean, float, int, nil},
 };
 
 #[derive(Debug, Clone)]

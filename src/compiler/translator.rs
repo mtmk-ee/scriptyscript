@@ -5,7 +5,7 @@
 
 use std::borrow::Borrow;
 
-use super::ast::{AstNode, BinaryOperationKind, Number, UnaryOperationKind};
+use super::ast::{AstNode, Number};
 use crate::runtime::bytecode::{Bytecode, OpCode};
 
 impl<T: Borrow<AstNode>> From<T> for Bytecode {
@@ -42,7 +42,9 @@ pub fn translate_node(ast: &AstNode) -> Bytecode {
         AstNode::FunctionDef { args, body } => {
             let mut translated_body = Bytecode::new();
             for name in args {
-                translated_body.inner_mut().push(OpCode::Store(name.clone()))
+                translated_body
+                    .inner_mut()
+                    .push(OpCode::Store(name.clone()))
             }
             translated_body.inner_mut().extend(translate_node(body));
             inner.push(OpCode::PushFunction(translated_body));
@@ -102,11 +104,11 @@ pub fn translate_node(ast: &AstNode) -> Bytecode {
         AstNode::BinaryOperation { kind, left, right } => {
             inner.extend(translate_node(left));
             inner.extend(translate_node(right));
-            inner.push((*kind).into());
+            inner.push(OpCode::BinaryOperation(*kind));
         }
         AstNode::UnaryOperation { kind, operand } => {
             inner.extend(translate_node(operand));
-            inner.push((*kind).into());
+            inner.push(OpCode::UnaryOperation(*kind));
         }
         AstNode::Identifier(identifier) => {
             inner.push(OpCode::Load(identifier.clone()));
@@ -126,36 +128,4 @@ pub fn translate_node(ast: &AstNode) -> Bytecode {
         }
     }
     result
-}
-
-impl From<BinaryOperationKind> for OpCode {
-    /// Convert a [`BinaryOperationKind`] into its matching [`OpCode`].
-    fn from(kind: BinaryOperationKind) -> Self {
-        match kind {
-            BinaryOperationKind::Add => OpCode::Add,
-            BinaryOperationKind::Subtract => OpCode::Subtract,
-            BinaryOperationKind::Multiply => OpCode::Multiply,
-            BinaryOperationKind::Divide => OpCode::Divide,
-            BinaryOperationKind::Remainder => OpCode::Remainder,
-            BinaryOperationKind::Equal => OpCode::Equal,
-            BinaryOperationKind::NotEqual => OpCode::NotEqual,
-            BinaryOperationKind::LessThan => OpCode::LessThan,
-            BinaryOperationKind::LessThanOrEqual => OpCode::LessThanOrEqual,
-            BinaryOperationKind::GreaterThan => OpCode::GreaterThan,
-            BinaryOperationKind::GreaterThanOrEqual => OpCode::GreaterThanOrEqual,
-            BinaryOperationKind::And => OpCode::And,
-            BinaryOperationKind::Or => OpCode::Or,
-            _ => todo!(),
-        }
-    }
-}
-
-impl From<UnaryOperationKind> for OpCode {
-    /// Convert a [`UnaryOperationKind`] into its matching [`OpCode`].
-    fn from(_kind: UnaryOperationKind) -> Self {
-        match _kind {
-            UnaryOperationKind::Negate => OpCode::Negate,
-            _ => todo!(),
-        }
-    }
 }

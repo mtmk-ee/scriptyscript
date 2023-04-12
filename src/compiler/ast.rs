@@ -123,13 +123,17 @@ pub enum AstNode {
 }
 
 /// The type of a unary operation.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum UnaryOperationKind {
     Negate,
     Not,
 }
 
 impl UnaryOperationKind {
+    /// Returns the dunder method name for this operation.
+    ///
+    /// Currently unused. This may be used for implementing operator
+    /// overloading in the future.
     pub fn dunder(&self) -> String {
         match self {
             UnaryOperationKind::Negate => "__neg__",
@@ -140,7 +144,7 @@ impl UnaryOperationKind {
 }
 
 /// The type of a binary operation.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum BinaryOperationKind {
     Add,
     Subtract,
@@ -159,6 +163,10 @@ pub enum BinaryOperationKind {
 }
 
 impl BinaryOperationKind {
+    /// Returns the dunder method name for this operation.
+    ///
+    /// Currently unused. This may be used for implementing operator
+    /// overloading in the future.
     pub fn dunder(&self) -> String {
         match self {
             BinaryOperationKind::Add => "__add__",
