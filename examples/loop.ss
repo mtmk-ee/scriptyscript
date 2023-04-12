@@ -27,7 +27,7 @@ early_exit = fn(max, exit_at) {
     for (i = 0; i < max; i = i + 1) {
         print(i);
         if i == exit_at {
-            print("exiting early at " + to_string(i));
+            print("exiting early at " + string(i));
             return;
         }
     }

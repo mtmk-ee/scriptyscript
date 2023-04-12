@@ -8,5 +8,5 @@ fib = fn(n) {
 };
 
 for (n = 0; n < 10; n = n + 1) {
-    print("fib_" + to_string(n) + " = " + to_string(fib(n)));
+    print("fib_" + string(n) + " = " + string(fib(n)));
 }
