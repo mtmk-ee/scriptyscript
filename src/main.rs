@@ -1,14 +1,21 @@
+//! Executable for the scriptyscript interpreter.
+//!
+//! Can be run without arguments to enter the REPL, or with a file path to run a script.
+
 use std::path::{Path, PathBuf};
 
 use clap::Parser;
+
 use scriptyscript::runtime::{executor::execute_source, state::State};
 
+/// Program arguments.
 #[derive(clap::Parser)]
 struct Arguments {
-    /// File to run
+    /// Script file to run
     file: Option<PathBuf>,
+    /// Show compiler output for the given file
     #[arg(short, long, default_value_t = false)]
-    show_bytecode: bool,
+    bytecode: bool,
 }
 
 fn main() {
@@ -16,7 +23,7 @@ fn main() {
     let mut state = State::new();
 
     if let Some(file) = args.file {
-        if args.show_bytecode {
+        if args.bytecode {
             show_bytecode(file);
         } else {
             run_file(&mut state, file);
@@ -26,17 +33,20 @@ fn main() {
     }
 }
 
+/// Run a script file on the given state.
 fn run_file(state: &mut State, file: impl AsRef<Path>) {
     let source = std::fs::read_to_string(file).unwrap();
     execute_source(state, &source).unwrap();
 }
 
+/// Show the compiled bytecode for a script file.
 fn show_bytecode(file: impl AsRef<Path>) {
     let source = std::fs::read_to_string(file).unwrap();
     let bytecode = scriptyscript::compiler::compile(source).unwrap();
     println!("{:?}", bytecode);
 }
 
+/// REPL-related functionality.
 mod repl {
     use std::io::Write;
 
@@ -46,6 +56,8 @@ mod repl {
     };
 
     /// Main entry point for the REPL.
+    ///
+    /// Runs continuously until the user exits.
     pub fn run(state: &mut State) {
         loop {
             let input = next_statement();
@@ -59,7 +71,10 @@ mod repl {
         }
     }
 
-    fn display_top(state: &mut State,) {
+    /// Display the object at the top of the stack.
+    ///
+    /// Will pop the object from the stack, if it exists.
+    fn display_top(state: &mut State) {
         if state.peek().is_some() {
             let pushed_amt = to_string(state, 1);
             assert_eq!(pushed_amt, 1);
