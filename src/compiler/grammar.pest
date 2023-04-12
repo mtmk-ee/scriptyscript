@@ -1,6 +1,14 @@
+// PEG grammar representing the syntax of the language.
+//
+// This file is used by PEST to generate a parser for the language at compile-time
+// using its procedural macros.
+//
+// The top-level rule is `script`, which is the entry point for the parser.
+
 // ============================================================================
 // Special Rules
 // ============================================================================
+// These are special built-in rules which are redefined to match ScriptyScript syntax.
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{
     "/*" ~ (!"*/" ~ ANY)* ~ "*/"

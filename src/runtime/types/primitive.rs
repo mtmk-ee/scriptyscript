@@ -1,9 +1,29 @@
+//! Module containing the [`Primitive`] type.
+//!
+//! This type is used to allow for specialized support for certain types.
+//! See the [`Primitive`] documentation for more information.
+
+/// Represents a single primitive value.
+///
+/// A primitive value is a simple type which has specialized support
+/// by the interpreter.
+///
+/// The `Primitive` type implements traits for certain operators.
 #[derive(Debug, Clone)]
 pub enum Primitive {
+    /// Represents the absence of a value.
     Nil,
+    /// An integer value.
+    ///
+    /// Currently this is defined as `i64`, but this may change in the future.
     Integer(i64),
+    /// A floating point value.
+    ///
+    /// Currently this is defined as `f64`, but this may change in the future.
     Float(f64),
+    /// A string value.
     String(String),
+    /// A boolean value.
     Boolean(bool),
 }
 

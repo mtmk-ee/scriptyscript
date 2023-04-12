@@ -78,3 +78,11 @@ There are a few example scripts written in ScriptyScript located in the `example
 ```
 cargo run --release examples\math.ss
 ```
+
+## Documentation
+
+If for whatever reason you want to read the documentation, you can build it locally:
+
+```
+cargo doc --no-deps --open
+```
