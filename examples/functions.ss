@@ -9,4 +9,4 @@ multiply_numbers = fn(a, b, c) {
 };
 
 print_hello();
-print("The product is: " + to_string(multiply_numbers(2, 3, 4)));
+print("The product is: " + string(multiply_numbers(2, 3, 4)));

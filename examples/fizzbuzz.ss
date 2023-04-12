@@ -36,6 +36,6 @@ cli = fn() {
     loop {
         fizzbuzz(read_int_or_exit());
     }
-}
+};
 
 cli();
