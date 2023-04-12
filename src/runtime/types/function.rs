@@ -1,6 +1,5 @@
 /// Module containing the [`Function`] enum, which is used to represent a callable function.
 /// The function may either be a scripted or a wrapped (Rust-side).
-
 use std::fmt::{Debug, Display};
 
 use crate::runtime::{bytecode::Bytecode, state::State};
@@ -50,8 +49,8 @@ impl Display for Function {
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Function::Scripted(a), Function::Scripted(b)) => a.bytecode() == b.bytecode(),
-            (Function::Wrapped(a), Function::Wrapped(b)) => *a as usize == *b as usize,
+            (Self::Scripted(a), Self::Scripted(b)) => a.bytecode() == b.bytecode(),
+            (Self::Wrapped(a), Self::Wrapped(b)) => *a as usize == *b as usize,
             _ => false,
         }
     }
@@ -66,11 +65,13 @@ pub struct ScriptedFunction {
 
 impl ScriptedFunction {
     /// Creates a new scripted function from the given bytecode.
-    pub fn new(bytecode: Bytecode) -> ScriptedFunction {
-        ScriptedFunction { bytecode }
+    #[must_use]
+    pub fn new(bytecode: Bytecode) -> Self {
+        Self { bytecode }
     }
 
     /// Returns the bytecode of the function.
+    #[must_use]
     pub fn bytecode(&self) -> &Bytecode {
         &self.bytecode
     }

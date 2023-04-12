@@ -45,7 +45,7 @@ const STACK_DEBUG: bool = false;
 /// Returns the number of objects pushed onto the stack.
 ///
 /// # Errors
-/// anyhow::Error if there is a problem parsing or compiling the input.
+/// `anyhow::Error` if there is a problem parsing or compiling the input.
 pub fn execute_source(state: &mut State, input: &str) -> Result<usize, anyhow::Error> {
     let bytecode = compile(input)?;
     let pushed_amt = execute(state, &bytecode);
@@ -73,7 +73,7 @@ fn run_execution_layer(state: &mut State, bytecode: &Bytecode) -> ControlFlow {
         if STACK_DEBUG {
             println!("=================================");
             println!("stack: {:?}", state.operand_stack_size());
-            println!("executing opcode: {:?}", opcode);
+            println!("executing opcode: {opcode:?}");
         }
 
         // This may exit the current execution layer early.

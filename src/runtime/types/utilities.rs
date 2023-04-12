@@ -10,6 +10,7 @@ use super::{
 use crate::runtime::bytecode::Bytecode;
 
 /// Creates an integer object from an integral value.
+#[must_use]
 pub fn int<T: num_traits::PrimInt>(value: T) -> Object {
     Object::new(
         Some(ObjectValue::Primitive(Primitive::Integer(
@@ -20,6 +21,7 @@ pub fn int<T: num_traits::PrimInt>(value: T) -> Object {
 }
 
 /// Creates a float object from a floating point value.
+#[must_use]
 pub fn float<T: num_traits::Float>(value: T) -> Object {
     Object::new(
         Some(ObjectValue::Primitive(Primitive::Float(
@@ -30,6 +32,7 @@ pub fn float<T: num_traits::Float>(value: T) -> Object {
 }
 
 /// Creates a string object from a [`String`] or [`str`] slice.
+#[must_use]
 pub fn string<T: AsRef<str>>(value: T) -> Object {
     Object::new(
         Some(ObjectValue::Primitive(Primitive::String(
@@ -40,6 +43,7 @@ pub fn string<T: AsRef<str>>(value: T) -> Object {
 }
 
 /// Creates a nil object.
+#[must_use]
 pub fn nil() -> Object {
     Object::new(Some(ObjectValue::Primitive(Primitive::Nil)), None)
 }
@@ -53,6 +57,7 @@ pub fn wrapped_function(func: WrappedFunction) -> Object {
 }
 
 /// Creates a function object from the given bytecode.
+#[must_use]
 pub fn scripted_function(bytecode: Bytecode) -> Object {
     Object::new(
         Some(ObjectValue::Function(Arc::new(Function::Scripted(
@@ -63,11 +68,13 @@ pub fn scripted_function(bytecode: Bytecode) -> Object {
 }
 
 /// Creates a table object.
+#[must_use]
 pub fn table() -> Object {
     todo!("tables are unsupported");
 }
 
 /// Creates a boolean object from the given value.
+#[must_use]
 pub fn boolean(x: bool) -> Object {
     Object::new(Some(ObjectValue::Primitive(Primitive::Boolean(x))), None)
 }

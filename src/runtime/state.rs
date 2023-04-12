@@ -32,8 +32,9 @@ impl State {
     ///
     /// The state will have a single call frame, the "global frame".
     /// The [`stdlib`](crate::stdlib) will be registered in the global frame.
-    pub fn new() -> State {
-        let mut result = State { stack: Vec::new() };
+    #[must_use]
+    pub fn new() -> Self {
+        let mut result = Self { stack: Vec::new() };
         result.push_frame();
         stdlib::register(&mut result);
         result
@@ -149,6 +150,7 @@ impl State {
     }
 
     /// Get the size of the operand stack of the current call frame.
+    #[must_use]
     pub fn operand_stack_size(&self) -> usize {
         self.current_frame()
             .expect("no call frame")
@@ -182,13 +184,14 @@ pub struct CallFrame {
 
 impl CallFrame {
     /// Create a new call frame with the given parent, if any.
-    pub fn with_parent(parent: Arc<Mutex<CallFrame>>) -> Self {
+    pub fn with_parent(parent: Arc<Mutex<Self>>) -> Self {
         let mut result = Self::new();
         result.parent = Some(parent);
         result
     }
 
     /// Create a new call frame with no parent.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             parent: None,
@@ -212,11 +215,13 @@ impl CallFrame {
     /// Peek at the top of the operand stack.
     ///
     /// Returns `None` if the stack is empty.
+    #[must_use]
     pub fn peek(&self) -> Option<Object> {
         self.operands.last().cloned()
     }
 
     /// Get the number of objects on the operand stack.
+    #[must_use]
     pub fn stack_size(&self) -> usize {
         self.operands.len()
     }
@@ -240,6 +245,7 @@ impl CallFrame {
     /// Load a local variable from the current frame (non-recursive).
     ///
     /// Returns `None` if the variable is not found.
+    #[must_use]
     pub fn load_local(&self, name: &str) -> Option<&Object> {
         self.locals.get(name)
     }

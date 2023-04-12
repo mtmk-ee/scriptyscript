@@ -15,11 +15,13 @@ pub struct Bytecode {
 
 impl Bytecode {
     /// Create an empty bytecode container.
+    #[must_use]
     pub fn new() -> Self {
         Self { inner: Vec::new() }
     }
 
     /// Fetch the inner vector of opcodes.
+    #[must_use]
     pub fn inner(&self) -> &Vec<OpCode> {
         &self.inner
     }
@@ -30,6 +32,7 @@ impl Bytecode {
     }
 
     /// Consume `self` and return the inner vector of opcodes.
+    #[must_use]
     pub fn into_inner(self) -> Vec<OpCode> {
         self.inner
     }
@@ -45,7 +48,7 @@ impl Bytecode {
     }
 
     /// Extends the bytecode with the opcodes from another bytecode.
-    pub fn extend(&mut self, other: &mut Bytecode) {
+    pub fn extend(&mut self, other: &mut Self) {
         self.inner.append(&mut other.inner);
     }
 

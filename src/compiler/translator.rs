@@ -18,24 +18,25 @@ impl<T: Borrow<AstNode>> From<T> for Bytecode {
 ///
 /// # Errors
 /// Returns an error if the AST node could not be compiled.
+#[must_use]
 pub fn translate_node(ast: &AstNode) -> Bytecode {
     let mut result = Bytecode::new();
     let inner = result.inner_mut();
 
     match ast {
         AstNode::Block(nodes) => {
-            nodes.iter().for_each(|node| {
+            for node in nodes.iter() {
                 inner.extend(translate_node(node));
-            });
+            }
         }
         AstNode::Assignment { identifier, value } => {
             inner.extend(translate_node(value));
             inner.push(OpCode::Store(identifier.clone()));
         }
         AstNode::FunctionCall { identifier, args } => {
-            args.iter().for_each(|arg| {
+            for arg in args.iter() {
                 inner.extend(translate_node(arg));
-            });
+            }
             inner.push(OpCode::Load(identifier.clone()));
             inner.push(OpCode::Call(args.len()));
         }

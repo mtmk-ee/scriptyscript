@@ -1,4 +1,4 @@
-//! The parser for the ScriptyScript language.
+//! The parser for the `ScriptyScript` language.
 //!
 //! The parser takes source code and transforms it into an [AST](crate::compiler::ast).
 

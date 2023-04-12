@@ -14,12 +14,14 @@ pub struct Table {
 }
 
 impl Table {
-    pub fn new() -> Table {
-        Table {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
             inner: HashMap::new(),
         }
     }
 
+    #[must_use]
     pub fn get(&self, key: &str) -> Option<&Object> {
         self.inner.get(key)
     }

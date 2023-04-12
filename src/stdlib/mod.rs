@@ -1,4 +1,4 @@
-//! Contains the standard library for the ScriptyScript language.
+//! Contains the standard library for the `ScriptyScript` language.
 //!
 //! These functions may be bound to a [`State`] and called from within a script.
 
@@ -65,7 +65,7 @@ pub fn print(state: &mut State, n: usize) -> usize {
         assert_eq!(pushed, 1);
         let primitive = state.pop().unwrap().as_primitive();
         match primitive {
-            Some(Primitive::String(s)) => print!("{}", s),
+            Some(Primitive::String(s)) => print!("{s}"),
             _ => panic!("unsupported type"),
         }
     }
@@ -135,7 +135,7 @@ pub fn round(state: &mut State, n: usize) -> usize {
         Some(ObjectValue::Primitive(x)) => match x {
             Primitive::Integer(x) => int(*x),
             Primitive::Float(x) => int(x.round() as i64),
-            Primitive::Boolean(x) => int(*x as i64),
+            Primitive::Boolean(x) => int(i64::from(*x)),
             _ => panic!("unsupported type"),
         },
         _ => panic!("unsupported type"),
@@ -161,7 +161,7 @@ pub fn to_int(state: &mut State, n: usize) -> usize {
         Some(ObjectValue::Primitive(x)) => match x {
             Primitive::Integer(x) => int(*x),
             Primitive::Float(x) => int(*x as i64),
-            Primitive::Boolean(x) => int(*x as i64),
+            Primitive::Boolean(x) => int(i64::from(*x)),
             Primitive::String(x) => match x.parse::<u64>() {
                 Ok(x) => int(x),
                 Err(_) => nil(),
@@ -191,7 +191,7 @@ pub fn to_float(state: &mut State, n: usize) -> usize {
         Some(ObjectValue::Primitive(x)) => match x {
             Primitive::Integer(x) => float(*x as f64),
             Primitive::Float(x) => float(*x),
-            Primitive::Boolean(x) => float(*x as u8 as f64),
+            Primitive::Boolean(x) => float(f64::from(u8::from(*x))),
             Primitive::String(x) => match x.parse::<f64>() {
                 Ok(x) => float(x),
                 Err(_) => nil(),
@@ -291,7 +291,7 @@ pub fn input(state: &mut State, n: usize) -> usize {
     let result = match value {
         Some(ObjectValue::Primitive(x)) => match x {
             Primitive::String(x) => {
-                print!("{}", x);
+                print!("{x}");
                 let _ = std::io::stdout().lock().flush();
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input).unwrap();

@@ -134,10 +134,11 @@ impl UnaryOperationKind {
     ///
     /// Currently unused. This may be used for implementing operator
     /// overloading in the future.
+    #[must_use]
     pub fn dunder(&self) -> String {
         match self {
-            UnaryOperationKind::Negate => "__neg__",
-            UnaryOperationKind::Not => "__not__",
+            Self::Negate => "__neg__",
+            Self::Not => "__not__",
         }
         .to_string()
     }
@@ -167,22 +168,23 @@ impl BinaryOperationKind {
     ///
     /// Currently unused. This may be used for implementing operator
     /// overloading in the future.
+    #[must_use]
     pub fn dunder(&self) -> String {
         match self {
-            BinaryOperationKind::Add => "__add__",
-            BinaryOperationKind::Subtract => "__sub__",
-            BinaryOperationKind::Multiply => "__mul__",
-            BinaryOperationKind::Divide => "__div__",
-            BinaryOperationKind::Remainder => "__rem__",
-            BinaryOperationKind::Power => "__pow__",
-            BinaryOperationKind::And => "__and__",
-            BinaryOperationKind::Or => "__or__",
-            BinaryOperationKind::Equal => "__eq__",
-            BinaryOperationKind::NotEqual => "__ne__",
-            BinaryOperationKind::GreaterThan => "__gt__",
-            BinaryOperationKind::GreaterThanOrEqual => "__ge__",
-            BinaryOperationKind::LessThan => "__lt__",
-            BinaryOperationKind::LessThanOrEqual => "__le__",
+            Self::Add => "__add__",
+            Self::Subtract => "__sub__",
+            Self::Multiply => "__mul__",
+            Self::Divide => "__div__",
+            Self::Remainder => "__rem__",
+            Self::Power => "__pow__",
+            Self::And => "__and__",
+            Self::Or => "__or__",
+            Self::Equal => "__eq__",
+            Self::NotEqual => "__ne__",
+            Self::GreaterThan => "__gt__",
+            Self::GreaterThanOrEqual => "__ge__",
+            Self::LessThan => "__lt__",
+            Self::LessThanOrEqual => "__le__",
         }
         .to_string()
     }

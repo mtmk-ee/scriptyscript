@@ -3,11 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use super::{
-    function::Function,
-    primitive::Primitive,
-    table::Table,
-};
+use super::{function::Function, primitive::Primitive, table::Table};
 
 #[derive(Debug, Clone)]
 pub enum ObjectValue {
@@ -24,10 +20,12 @@ pub struct ObjectInner {
 }
 
 impl ObjectInner {
-    pub fn new(value: Option<ObjectValue>, metatable: Option<Object>) -> ObjectInner {
-        ObjectInner { value, metatable }
+    #[must_use]
+    pub fn new(value: Option<ObjectValue>, metatable: Option<Object>) -> Self {
+        Self { value, metatable }
     }
 
+    #[must_use]
     pub fn value(&self) -> &Option<ObjectValue> {
         &self.value
     }
@@ -36,6 +34,7 @@ impl ObjectInner {
         self.value = value;
     }
 
+    #[must_use]
     pub fn metatable(&self) -> &Option<Object> {
         &self.metatable
     }
@@ -51,16 +50,19 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn new(value: Option<ObjectValue>, metatable: Option<Object>) -> Object {
-        Object {
+    #[must_use]
+    pub fn new(value: Option<ObjectValue>, metatable: Option<Self>) -> Self {
+        Self {
             inner: Arc::new(Mutex::new(ObjectInner { value, metatable })),
         }
     }
 
+    #[must_use]
     pub fn inner(&self) -> Arc<Mutex<ObjectInner>> {
         self.inner.clone()
     }
 
+    #[must_use]
     pub fn as_primitive(&self) -> Option<Primitive> {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Primitive(p)) => Some(p.clone()),
@@ -68,6 +70,7 @@ impl Object {
         }
     }
 
+    #[must_use]
     pub fn as_bool(&self) -> Option<bool> {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Primitive(Primitive::Boolean(x))) => Some(*x),
@@ -75,14 +78,15 @@ impl Object {
         }
     }
 
-    pub fn set_key(&mut self, key: &str, value: Object) {
+    pub fn set_key(&mut self, key: &str, value: Self) {
         match &mut self.inner.lock().unwrap().value {
             Some(ObjectValue::Table(table)) => table.set(key.to_owned(), value),
             _ => panic!("Cannot set key on non-table object"),
         }
     }
 
-    pub fn get_key(&self, key: &str) -> Option<Object> {
+    #[must_use]
+    pub fn get_key(&self, key: &str) -> Option<Self> {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Table(table)) => table.get(key).cloned(),
             _ => panic!("Cannot get key on non-table object"),
@@ -94,8 +98,8 @@ impl Debug for Object {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.inner.lock().unwrap().value {
             Some(ObjectValue::Primitive(p)) => write!(f, "{}", p.to_string()),
-            Some(ObjectValue::Function(function)) => write!(f, "{}", function),
-            Some(ObjectValue::Table(t)) => write!(f, "table: {:?}", t),
+            Some(ObjectValue::Function(function)) => write!(f, "{function}"),
+            Some(ObjectValue::Table(t)) => write!(f, "table: {t:?}"),
             None => write!(f, "nil"),
         }
     }
