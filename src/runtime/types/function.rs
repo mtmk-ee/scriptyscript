@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use crate::runtime::{opcode::OpCode, state::State};
+use crate::runtime::{bytecode::Bytecode, state::State};
 
 pub type WrappedFunction = fn(&mut State, usize) -> usize;
 
@@ -13,8 +13,14 @@ pub enum Function {
 impl Debug for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Scripted(func) => f.debug_tuple("scripted function").field(func.bytecode()).finish(),
-            Self::Wrapped(func) => f.debug_tuple("wrapped function").field(&(*func as usize)).finish(),
+            Self::Scripted(func) => f
+                .debug_tuple("scripted function")
+                .field(func.bytecode())
+                .finish(),
+            Self::Wrapped(func) => f
+                .debug_tuple("wrapped function")
+                .field(&(*func as usize))
+                .finish(),
         }
     }
 }
@@ -24,7 +30,6 @@ impl Display for Function {
         Debug::fmt(&self, f)
     }
 }
-
 
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {
@@ -38,15 +43,15 @@ impl PartialEq for Function {
 
 #[derive(Debug, Clone)]
 pub struct ScriptedFunction {
-    bytecode: Vec<OpCode>,
+    bytecode: Bytecode,
 }
 
 impl ScriptedFunction {
-    pub fn new(bytecode: Vec<OpCode>) -> ScriptedFunction {
+    pub fn new(bytecode: Bytecode) -> ScriptedFunction {
         ScriptedFunction { bytecode }
     }
 
-    pub fn bytecode(&self) -> &Vec<OpCode> {
+    pub fn bytecode(&self) -> &Bytecode {
         &self.bytecode
     }
 }

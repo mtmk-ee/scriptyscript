@@ -1,65 +1,78 @@
-use crate::runtime::opcode::OpCode;
+//! Module for translating an AST into bytecode for use by the [`executor`](crate::runtime::executor).
+//!
+//! There's a single public function, [`translate_node`], which can be used to translate any
+//! node in an AST (including the root node) into its bytecode representation.
+
+use std::borrow::Borrow;
 
 use super::ast::{AstNode, BinaryOperationKind, Number, UnaryOperationKind};
+use crate::runtime::bytecode::{Bytecode, OpCode};
+
+impl<T: Borrow<AstNode>> From<T> for Bytecode {
+    fn from(node: T) -> Self {
+        translate_node(node.borrow())
+    }
+}
 
 /// Translates an AST node into a list of opcodes which can be executed on a state.
 ///
 /// # Errors
 /// Returns an error if the AST node could not be compiled.
-pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
-    let mut bytecode = Vec::new();
+pub fn translate_node(ast: &AstNode) -> Bytecode {
+    let mut result = Bytecode::new();
+    let inner = result.inner_mut();
 
     match ast {
         AstNode::Block(nodes) => {
             nodes.iter().for_each(|node| {
-                bytecode.extend(translate_node(node).unwrap());
+                inner.extend(translate_node(node));
             });
         }
         AstNode::Assignment { identifier, value } => {
-            bytecode.extend(translate_node(value).unwrap());
-            bytecode.push(OpCode::Store(identifier.clone()));
+            inner.extend(translate_node(value));
+            inner.push(OpCode::Store(identifier.clone()));
         }
         AstNode::FunctionCall { identifier, args } => {
             args.iter().for_each(|arg| {
-                bytecode.extend(translate_node(arg).unwrap());
+                inner.extend(translate_node(arg));
             });
-            bytecode.push(OpCode::Load(identifier.clone()));
-            bytecode.push(OpCode::Call(args.len()));
+            inner.push(OpCode::Load(identifier.clone()));
+            inner.push(OpCode::Call(args.len()));
         }
         AstNode::FunctionDef { args, body } => {
-            let mut translated_body = Vec::new();
+            let mut translated_body = Bytecode::new();
             for name in args {
-                translated_body.push(OpCode::Store(name.clone()))
+                translated_body.inner_mut().push(OpCode::Store(name.clone()))
             }
-            translated_body.extend(translate_node(body).unwrap());
-
-            bytecode.push(OpCode::PushFunction(translated_body));
+            translated_body.inner_mut().extend(translate_node(body));
+            inner.push(OpCode::PushFunction(translated_body));
         }
         AstNode::Return { value } => {
+            // Return can be empty, or can return the result of an expression.
             let mut n = 0;
             if let Some(value) = value {
-                bytecode.extend(translate_node(value).unwrap());
+                inner.extend(translate_node(value));
                 n = 1;
             }
-            bytecode.push(OpCode::Return(n));
+            inner.push(OpCode::Return(n));
         }
         AstNode::Break => {
-            bytecode.push(OpCode::Break);
+            inner.push(OpCode::Break);
         }
         AstNode::Continue => {
-            bytecode.push(OpCode::Continue);
+            inner.push(OpCode::Continue);
         }
         AstNode::If {
             condition,
             body,
             else_body,
         } => {
-            bytecode.push(OpCode::If {
-                condition: translate_node(condition).unwrap(),
-                body: translate_node(body).unwrap(),
+            inner.push(OpCode::If {
+                condition: translate_node(condition),
+                body: translate_node(body),
                 else_body: else_body
                     .as_ref()
-                    .map(|else_body| translate_node(else_body).unwrap()),
+                    .map(|else_body| translate_node(else_body)),
             });
         }
         AstNode::For {
@@ -68,54 +81,51 @@ pub fn translate_node(ast: &AstNode) -> Result<Vec<OpCode>, anyhow::Error> {
             increment,
             body,
         } => {
-            bytecode.push(OpCode::For {
-                initialization: initialization
-                    .as_ref()
-                    .map(|node| translate_node(node).unwrap()),
-                condition: condition.as_ref().map(|node| translate_node(node).unwrap()),
-                increment: increment.as_ref().map(|node| translate_node(node).unwrap()),
-                body: translate_node(body).unwrap(),
+            inner.push(OpCode::For {
+                initialization: initialization.as_ref().map(|node| translate_node(node)),
+                condition: condition.as_ref().map(|node| translate_node(node)),
+                increment: increment.as_ref().map(|node| translate_node(node)),
+                body: translate_node(body),
             });
         }
         AstNode::While { condition, body } => {
-            bytecode.push(OpCode::While {
-                condition: translate_node(condition).unwrap(),
-                body: translate_node(body).unwrap(),
+            inner.push(OpCode::While {
+                condition: translate_node(condition),
+                body: translate_node(body),
             });
         }
         AstNode::Loop { body } => {
-            bytecode.push(OpCode::Loop {
-                body: translate_node(body).unwrap(),
+            inner.push(OpCode::Loop {
+                body: translate_node(body),
             });
         }
         AstNode::BinaryOperation { kind, left, right } => {
-            bytecode.extend(translate_node(left).unwrap());
-            bytecode.extend(translate_node(right).unwrap());
-            bytecode.push((*kind).into());
+            inner.extend(translate_node(left));
+            inner.extend(translate_node(right));
+            inner.push((*kind).into());
         }
         AstNode::UnaryOperation { kind, operand } => {
-            bytecode.extend(translate_node(operand).unwrap());
-            bytecode.push((*kind).into());
+            inner.extend(translate_node(operand));
+            inner.push((*kind).into());
         }
         AstNode::Identifier(identifier) => {
-            bytecode.push(OpCode::Load(identifier.clone()));
+            inner.push(OpCode::Load(identifier.clone()));
         }
         AstNode::NumberLiteral(number) => match number {
-            Number::Integer(x) => bytecode.push(OpCode::PushInteger(*x)),
-            Number::Float(x) => bytecode.push(OpCode::PushFloat(*x)),
+            Number::Integer(x) => inner.push(OpCode::PushInteger(*x)),
+            Number::Float(x) => inner.push(OpCode::PushFloat(*x)),
         },
         AstNode::StringLiteral(string) => {
-            bytecode.push(OpCode::PushString(string.clone()));
+            inner.push(OpCode::PushString(string.clone()));
         }
         AstNode::BooleanLiteral(boolean) => {
-            bytecode.push(OpCode::PushBool(*boolean));
+            inner.push(OpCode::PushBool(*boolean));
         }
         AstNode::NilLiteral => {
-            bytecode.push(OpCode::PushNil);
+            inner.push(OpCode::PushNil);
         }
     }
-
-    Ok(bytecode)
+    result
 }
 
 impl From<BinaryOperationKind> for OpCode {

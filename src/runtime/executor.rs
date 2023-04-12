@@ -6,17 +6,13 @@ use crate::{
 };
 
 use super::{
-    opcode::OpCode,
+    bytecode::{Bytecode, OpCode},
     state::State,
     types::{
-        object::{
-            add, and, divide, equals, greater_than, greater_than_or_equal, less_than,
-            less_than_or_equal, multiply, negate, not_equals, or, remainder, subtract,
-        },
+        operations,
         utilities::{boolean, float, int, nil, scripted_function, string},
     },
 };
-
 
 macro_rules! propagate_control_flow {
     ($cf:expr) => {
@@ -59,27 +55,21 @@ pub fn execute_source(state: &mut State, input: &str) -> Result<usize, anyhow::E
     Ok(pushed_amt)
 }
 
-pub fn execute(state: &mut State, bytecode: &Vec<OpCode>) -> usize {
+pub fn execute(state: &mut State, bytecode: &Bytecode) -> usize {
     match execute_impl(state, bytecode) {
         ControlFlow::Return(n) => n,
         _ => 0,
     }
 }
 
-fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
-    let frame = state.current_frame().expect("no call frame");
-    let mut pointer = 0;
-
-    while pointer < bytecode.len() {
-        let opcode = &bytecode[pointer];
-        pointer += 1;
-
+fn execute_impl(state: &mut State, bytecode: &Bytecode) -> ControlFlow {
+    for opcode in bytecode.iter() {
         // println!("=================================");
         // println!("executing opcode: {:?}", opcode);
 
         match opcode {
             OpCode::PushInteger(x) => {
-                frame.lock().unwrap().push(&int(*x));
+                state.push(&int(*x));
             }
             OpCode::PushFloat(x) => {
                 state.push(&float(*x));
@@ -97,14 +87,14 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 state.push(&nil());
             }
             OpCode::Store(identifier) => {
-                frame.lock().unwrap().store_local(identifier);
+                state.store_local(identifier);
             }
             OpCode::Load(identifier) => {
-                frame.lock().unwrap().load(identifier);
+                state.load(identifier);
             }
             OpCode::SetKey(key) => {
-                let value = frame.lock().unwrap().pop().unwrap();
-                let mut table_obj = frame.lock().unwrap().pop().unwrap();
+                let value = state.pop().unwrap();
+                let mut table_obj = state.pop().unwrap();
                 table_obj.set_key(key, value);
             }
             OpCode::GetKey(key) => {
@@ -137,8 +127,8 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
                 propagate_control_flow!(infinite_loop(state, opcode));
             }
             OpCode::Duplicate => {
-                let value = frame.lock().unwrap().peek().unwrap();
-                frame.lock().unwrap().push(&value);
+                let value = state.peek().unwrap();
+                state.push(&value);
             }
             opcode @ (OpCode::Add
             | OpCode::Subtract
@@ -166,24 +156,23 @@ fn execute_impl(state: &mut State, bytecode: &Vec<OpCode>) -> ControlFlow {
     ControlFlow::None
 }
 
-
 fn binary_operation(state: &mut State, opcode: &OpCode) {
     let right = state.pop().unwrap();
     let left = state.pop().unwrap();
     match opcode {
-        OpCode::Add => add(state, &left, &right),
-        OpCode::Subtract => subtract(state, &left, &right),
-        OpCode::Multiply => multiply(state, &left, &right),
-        OpCode::Divide => divide(state, &left, &right),
-        OpCode::Remainder => remainder(state, &left, &right),
-        OpCode::Equal => equals(state, &left, &right),
-        OpCode::NotEqual => not_equals(state, &left, &right),
-        OpCode::GreaterThan => greater_than(state, &left, &right),
-        OpCode::GreaterThanOrEqual => greater_than_or_equal(state, &left, &right),
-        OpCode::LessThan => less_than(state, &left, &right),
-        OpCode::LessThanOrEqual => less_than_or_equal(state, &left, &right),
-        OpCode::And => and(state, &left, &right),
-        OpCode::Or => or(state, &left, &right),
+        OpCode::Add => operations::add(state, &left, &right),
+        OpCode::Subtract => operations::subtract(state, &left, &right),
+        OpCode::Multiply => operations::multiply(state, &left, &right),
+        OpCode::Divide => operations::divide(state, &left, &right),
+        OpCode::Remainder => operations::remainder(state, &left, &right),
+        OpCode::Equal => operations::equals(state, &left, &right),
+        OpCode::NotEqual => operations::not_equals(state, &left, &right),
+        OpCode::GreaterThan => operations::greater_than(state, &left, &right),
+        OpCode::GreaterThanOrEqual => operations::greater_than_or_equal(state, &left, &right),
+        OpCode::LessThan => operations::less_than(state, &left, &right),
+        OpCode::LessThanOrEqual => operations::less_than_or_equal(state, &left, &right),
+        OpCode::And => operations::and(state, &left, &right),
+        OpCode::Or => operations::or(state, &left, &right),
         _ => unreachable!(),
     };
 }
@@ -191,7 +180,7 @@ fn binary_operation(state: &mut State, opcode: &OpCode) {
 fn unary_operation(state: &mut State, opcode: &OpCode) {
     let operand = state.pop().unwrap();
     match opcode {
-        OpCode::Negate => negate(state, &operand),
+        OpCode::Negate => operations::negate(state, &operand),
         _ => unreachable!(),
     };
 }

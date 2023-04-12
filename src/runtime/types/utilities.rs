@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::runtime::opcode::OpCode;
+use crate::runtime::bytecode::Bytecode;
 
 use super::{
     function::{Function, ScriptedFunction, WrappedFunction},
@@ -47,7 +47,7 @@ pub fn wrapped_function(func: WrappedFunction) -> Object {
     )
 }
 
-pub fn scripted_function(bytecode: Vec<OpCode>) -> Object {
+pub fn scripted_function(bytecode: Bytecode) -> Object {
     Object::new(
         Some(ObjectValue::Function(Arc::new(Function::Scripted(
             ScriptedFunction::new(bytecode),

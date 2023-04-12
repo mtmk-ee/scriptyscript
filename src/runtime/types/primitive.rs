@@ -8,6 +8,7 @@ pub enum Primitive {
 }
 
 impl Eq for Primitive {}
+
 impl PartialEq for Primitive {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {

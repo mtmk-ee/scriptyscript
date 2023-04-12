@@ -39,7 +39,6 @@ impl CallFrame {
     }
 
     pub fn load(&mut self, name: &str) {
-
         let local_value = self.locals.get(name).cloned();
         if let Some(x) = local_value {
             self.push(&x);
@@ -133,6 +132,22 @@ impl State {
             .unwrap()
             .locals
             .insert(name.to_string(), obj);
+    }
+
+    pub fn store_local(&mut self, name: &str) {
+        self.current_frame()
+            .expect("no call frame")
+            .lock()
+            .unwrap()
+            .store_local(name);
+    }
+
+    pub fn load(&mut self, name: &str) {
+        self.current_frame()
+            .expect("no call frame")
+            .lock()
+            .unwrap()
+            .load(name);
     }
 }
 

@@ -5,9 +5,9 @@ use crate::runtime::{
     state::State,
     types::{
         function::Function,
-        object::{greater_than, less_than, ObjectValue},
+        object::{ObjectValue},
         primitive::Primitive,
-        utilities::{float, int, nil, string, wrapped_function},
+        utilities::{float, int, nil, string, wrapped_function}, operations,
     },
 };
 
@@ -67,7 +67,7 @@ pub fn max(state: &mut State, n: usize) -> usize {
     let mut max = state.pop().unwrap();
     for _ in 1..n {
         let current = state.pop().unwrap();
-        greater_than(state, &current, &max);
+        operations::greater_than(state, &current, &max);
 
         match state.pop().unwrap().as_bool() {
             Some(true) => max = current,
@@ -85,7 +85,7 @@ pub fn min(state: &mut State, n: usize) -> usize {
     let mut min = state.pop().unwrap();
     for _ in 1..n {
         let current = state.pop().unwrap();
-        less_than(state, &current, &min);
+        operations::less_than(state, &current, &min);
 
         match state.pop().unwrap().as_bool() {
             Some(true) => min = current,

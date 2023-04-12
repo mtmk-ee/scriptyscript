@@ -1,3 +1,7 @@
+//! The parser for the ScriptyScript language.
+//!
+//! The parser takes source code and transforms it into an [AST](crate::compiler::ast).
+
 use once_cell::sync::OnceCell;
 use pest::{
     pratt_parser::{Assoc, Op, PrattParser},
@@ -13,7 +17,7 @@ static EXPRESSION_PARSER: OnceCell<PrattParser<Rule>> = OnceCell::new();
 
 #[derive(pest_derive::Parser)]
 #[grammar = "compiler/grammar.pest"]
-pub struct GrammarParser {}
+struct GrammarParser {}
 
 /// Try to parse a string into an [`AstNode`].
 ///
@@ -37,7 +41,7 @@ fn parse_statements(pairs: Pairs) -> AstNode {
 }
 
 /// Parse a statement into an [`AstNode`]
-pub fn parse_statement(pairs: Pairs) -> AstNode {
+fn parse_statement(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let pair = pairs.next().unwrap();
     match pair.as_rule() {
@@ -55,7 +59,7 @@ pub fn parse_statement(pairs: Pairs) -> AstNode {
 }
 
 /// Parse an expression primary into an [`AstNode`]
-pub fn parse_assignment(pairs: Pairs) -> AstNode {
+fn parse_assignment(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let identifier = pairs.next().unwrap().as_str().to_string();
     let value = pairs.next().unwrap().into_inner();
@@ -65,7 +69,7 @@ pub fn parse_assignment(pairs: Pairs) -> AstNode {
     }
 }
 
-pub fn parse_return(pairs: Pairs) -> AstNode {
+fn parse_return(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     match pairs.next() {
         Some(pair) => {
@@ -156,7 +160,7 @@ fn expression_parser() -> &'static PrattParser<Rule> {
 }
 
 /// Parse an expression into an [`AstNode`]
-pub fn parse_expression(pairs: Pairs) -> AstNode {
+fn parse_expression(pairs: Pairs) -> AstNode {
     expression_parser()
         .map_primary(parse_expression_primary)
         .map_prefix(|op, rhs| match op.as_rule() {
@@ -200,7 +204,7 @@ pub fn parse_expression(pairs: Pairs) -> AstNode {
 /// Parse an expression primary (i.e. atom) into an [`AstNode`].
 ///
 /// This function is theoretically infallible for a successfully parsed expression primary.
-pub fn parse_expression_primary(pair: Pair) -> AstNode {
+fn parse_expression_primary(pair: Pair) -> AstNode {
     match pair.as_rule() {
         Rule::identifier => AstNode::Identifier(pair.as_str().to_string()),
         Rule::dec_literal
@@ -219,7 +223,7 @@ pub fn parse_expression_primary(pair: Pair) -> AstNode {
 }
 
 /// Parse a function call into an [`AstNode`].
-pub fn parse_function_call(pairs: Pairs) -> AstNode {
+fn parse_function_call(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let identifier = pairs.next().unwrap().as_str().to_string();
     AstNode::FunctionCall {
@@ -230,11 +234,11 @@ pub fn parse_function_call(pairs: Pairs) -> AstNode {
     }
 }
 
-pub fn parse_function_def_arguments(pairs: Pairs) -> Vec<String> {
+fn parse_function_def_arguments(pairs: Pairs) -> Vec<String> {
     pairs.map(|pair| pair.as_str().to_string()).collect()
 }
 
-pub fn parse_function_def(pairs: Pairs) -> AstNode {
+fn parse_function_def(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let args = parse_function_def_arguments(pairs.next().unwrap().into_inner());
     let body = parse_statements(pairs.next().unwrap().into_inner());
@@ -244,7 +248,7 @@ pub fn parse_function_def(pairs: Pairs) -> AstNode {
     }
 }
 
-pub fn parse_if(pairs: Pairs) -> AstNode {
+fn parse_if(pairs: Pairs) -> AstNode {
     let mut pairs = pairs;
     let condition = pairs.next().unwrap().into_inner();
     let body = parse_statements(pairs.next().unwrap().into_inner());
@@ -266,7 +270,7 @@ pub fn parse_if(pairs: Pairs) -> AstNode {
 }
 
 /// Parse a number literal into a [`Number`].
-pub fn parse_number_literal(pair: Pair) -> Number {
+fn parse_number_literal(pair: Pair) -> Number {
     match pair.as_rule() {
         Rule::dec_literal | Rule::hex_literal | Rule::bin_literal => {
             Number::Integer(pair.as_str().parse().unwrap())
@@ -277,12 +281,12 @@ pub fn parse_number_literal(pair: Pair) -> Number {
 }
 
 /// Parse a string literal into a `String`.
-pub fn parse_string_literal(pair: Pair) -> String {
+fn parse_string_literal(pair: Pair) -> String {
     let token = pair.as_str();
     unescape::unescape(&token[1..token.len() - 1]).unwrap()
 }
 
 /// Parse a boolean literal into a bool.
-pub fn parse_boolean_literal(pair: Pair) -> bool {
+fn parse_boolean_literal(pair: Pair) -> bool {
     pair.as_str() == "true"
 }
