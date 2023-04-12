@@ -190,7 +190,7 @@ pub fn to_float(state: &mut State, n: usize) -> usize {
     let result = match value {
         Some(ObjectValue::Primitive(x)) => match x {
             Primitive::Integer(x) => float(*x as f64),
-            Primitive::Float(x) => float(*x as f64),
+            Primitive::Float(x) => float(*x),
             Primitive::Boolean(x) => float(*x as u8 as f64),
             Primitive::String(x) => match x.parse::<f64>() {
                 Ok(x) => float(x),
@@ -242,16 +242,13 @@ pub fn exec(state: &mut State, n: usize) -> usize {
     let value = inner.lock().unwrap();
     let value = value.value();
     let result = match value {
-        Some(ObjectValue::Primitive(x)) => match x {
-            Primitive::String(source) => {
-                let result = execute_source(state, &source);
-                match result {
-                    Ok(_) => state.pop().unwrap_or_else(nil),
-                    Err(e) => string(e.to_string()),
-                }
+        Some(ObjectValue::Primitive(Primitive::String(source))) => {
+            let result = execute_source(state, source);
+            match result {
+                Ok(_) => state.pop().unwrap_or_else(nil),
+                Err(e) => string(e.to_string()),
             }
-            _ => panic!("unsupported type"),
-        },
+        }
         _ => panic!("unsupported type"),
     };
     state.push(&result);
@@ -287,7 +284,7 @@ pub fn exit(state: &mut State, n: usize) -> usize {
 pub fn input(state: &mut State, n: usize) -> usize {
     assert!(n <= 1);
 
-    let object = state.pop().unwrap_or_else(|| string("".to_string()));
+    let object = state.pop().unwrap_or_else(|| string(""));
     let inner = object.inner();
     let value = inner.lock().unwrap();
     let value = value.value();

@@ -252,3 +252,10 @@ impl CallFrame {
         self.locals.insert(name.to_string(), value);
     }
 }
+
+impl Default for CallFrame {
+    /// Same as `CallFrame::new()`
+    fn default() -> Self {
+        Self::new()
+    }
+}

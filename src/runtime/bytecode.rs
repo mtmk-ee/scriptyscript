@@ -55,6 +55,13 @@ impl Bytecode {
     }
 }
 
+impl Default for Bytecode {
+    /// Same as `Bytecode::new()` [asdf]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IntoIterator for Bytecode {
     type Item = OpCode;
     type IntoIter = std::vec::IntoIter<OpCode>;
